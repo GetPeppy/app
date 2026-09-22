@@ -1,0 +1,12 @@
+{
+  "name": "peppy-app",
+  "version": "1.0.0",
+  "description": "Peppy research peptides storefront + admin",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  }
+}
