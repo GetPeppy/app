@@ -416,39 +416,36 @@ footer { background: #fff; border-top: 1px solid var(--border); padding: 40px 48
 </section>
   
   <!-- Why Peppy strip -->
-  <div class="why-strip">
-    <div class="why-item">
-      <div class="why-icon">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v11m0 0a3 3 0 1 0 6 0M9 14H5a2 2 0 0 1-2-2V5m16 9h-4M3 5h18"/>
-        </svg>
-      </div>
-      <p class="why-title">Third-Party Tested</p>
-      <p class="why-desc">Every batch independently tested by accredited labs. Certificates of analysis available on every product page.</p>
+  <section class="cats-section">
+    <div>
+      <p class="section-label">Browse by category</p>
+      <h2 class="section-title">Research Categories</h2>
     </div>
-    <div class="why-item">
-      <div class="why-icon">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-          <polyline points="9 12 11 14 15 10"/>
-        </svg>
+    <div class="cats-grid">
+      <div class="cat-tile" onclick="showPage('shop');setFilter('Metabolic Research',document.querySelector('.filter-btn[onclick*=Metabolic]'))">
+        <div class="cat-tile-dot" style="background:#D97706" aria-hidden="true"></div>
+        <p class="cat-tile-name">Metabolic Research</p>
+        <p class="cat-tile-count">GLP-1 & weight management</p>
       </div>
-      <p class="why-title">99%+ Purity Guaranteed</p>
-      <p class="why-desc">Advanced purification methods ensure every compound meets or exceeds pharmaceutical-grade purity standards.</p>
-    </div>
-    <div class="why-item">
-      <div class="why-icon">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
-        </svg>
+      <div class="cat-tile" onclick="showPage('shop');setFilter('Cognitive Research',document.querySelector('.filter-btn[onclick*=Cognitive]'))">
+        <div class="cat-tile-dot" style="background:#2563EB" aria-hidden="true"></div>
+        <p class="cat-tile-name">Cognitive Research</p>
+        <p class="cat-tile-count">Focus, mood & neuroprotection</p>
       </div>
-      <p class="why-title">Canada-Wide Shipping</p>
-      <p class="why-desc">Discrete shipping across Canada. Payment via USDC, BTC, or e-Transfer. Research use only.</p>
+      <div class="cat-tile" onclick="showPage('shop');setFilter('Longevity Research',document.querySelector('.filter-btn[onclick*=Longevity]'))">
+        <div class="cat-tile-dot" style="background:#16A34A" aria-hidden="true"></div>
+        <p class="cat-tile-name">Longevity Research</p>
+        <p class="cat-tile-count">NAD+, GLOW, KLOW & more</p>
+      </div>
+      <div class="cat-tile" onclick="showPage('shop');setFilter('Growth Research',document.querySelector('.filter-btn[onclick*=Growth]'))">
+        <div class="cat-tile-dot" style="background:#7C3AED" aria-hidden="true"></div>
+        <p class="cat-tile-name">Growth Research</p>
+        <p class="cat-tile-count">GH secretagogues & peptides</p>
+      </div>
     </div>
-  </div>
+  </section>
 
-  <!-- Featured Products -->
-  <section class="featured-section">
+<section class="featured-section">
     <div class="section-header">
       <div>
         <p class="section-label">Bestsellers</p>
@@ -513,35 +510,36 @@ footer { background: #fff; border-top: 1px solid var(--border); padding: 40px 48
     </div>
   </section>
 
-  <!-- Category tiles -->
-  <section class="cats-section">
-    <div>
-      <p class="section-label">Browse by category</p>
-      <h2 class="section-title">Research Categories</h2>
+<div class="why-strip">
+    <div class="why-item">
+      <div class="why-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v11m0 0a3 3 0 1 0 6 0M9 14H5a2 2 0 0 1-2-2V5m16 9h-4M3 5h18"/>
+        </svg>
+      </div>
+      <p class="why-title">Third-Party Tested</p>
+      <p class="why-desc">Every batch independently tested by accredited labs. Certificates of analysis available on every product page.</p>
     </div>
-    <div class="cats-grid">
-      <div class="cat-tile" onclick="showPage('shop');setFilter('Metabolic Research',document.querySelector('.filter-btn[onclick*=Metabolic]'))">
-        <div class="cat-tile-dot" style="background:#D97706" aria-hidden="true"></div>
-        <p class="cat-tile-name">Metabolic Research</p>
-        <p class="cat-tile-count">GLP-1 & weight management</p>
+    <div class="why-item">
+      <div class="why-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          <polyline points="9 12 11 14 15 10"/>
+        </svg>
       </div>
-      <div class="cat-tile" onclick="showPage('shop');setFilter('Cognitive Research',document.querySelector('.filter-btn[onclick*=Cognitive]'))">
-        <div class="cat-tile-dot" style="background:#2563EB" aria-hidden="true"></div>
-        <p class="cat-tile-name">Cognitive Research</p>
-        <p class="cat-tile-count">Focus, mood & neuroprotection</p>
-      </div>
-      <div class="cat-tile" onclick="showPage('shop');setFilter('Longevity Research',document.querySelector('.filter-btn[onclick*=Longevity]'))">
-        <div class="cat-tile-dot" style="background:#16A34A" aria-hidden="true"></div>
-        <p class="cat-tile-name">Longevity Research</p>
-        <p class="cat-tile-count">NAD+, GLOW, KLOW & more</p>
-      </div>
-      <div class="cat-tile" onclick="showPage('shop');setFilter('Growth Research',document.querySelector('.filter-btn[onclick*=Growth]'))">
-        <div class="cat-tile-dot" style="background:#7C3AED" aria-hidden="true"></div>
-        <p class="cat-tile-name">Growth Research</p>
-        <p class="cat-tile-count">GH secretagogues & peptides</p>
-      </div>
+      <p class="why-title">99%+ Purity Guaranteed</p>
+      <p class="why-desc">Advanced purification methods ensure every compound meets or exceeds pharmaceutical-grade purity standards.</p>
     </div>
-  </section>
+    <div class="why-item">
+      <div class="why-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
+        </svg>
+      </div>
+      <p class="why-title">Canada-Wide Shipping</p>
+      <p class="why-desc">Discrete shipping across Canada. Payment via USDC, BTC, or e-Transfer. Research use only.</p>
+    </div>
+  </div>
 
 
 </div>
