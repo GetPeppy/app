@@ -148,8 +148,8 @@ nav { display: flex; align-items: center; justify-content: space-between; paddin
 /* ── Lab Reports ─────────────────────────────────────────── */
 .lab-section { padding: 48px 48px; }
 .lab-product { margin-bottom: 32px; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
-.lab-product-header { padding: 16px 20px; background: #FAFAFA; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
-.lab-product-name { font-family: 'Fraunces', serif; font-size: 18px; font-weight: 400; }
+.lab-product-header { padding: 16px 20px; background: #FAFAFA; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: flex-start; }
+.lab-product-name { font-family: 'Fraunces', serif; font-size: 20px; font-weight: 400; color: #111; }
 .lab-cat-pill { font-size: 10px; font-weight: 600; padding: 3px 10px; border-radius: 100px; letter-spacing: 0.05em; text-transform: uppercase; }
 .coa-list { display: flex; flex-direction: column; }
 .coa-row { display: grid; grid-template-columns: 1fr auto; align-items: center; padding: 14px 20px; border-bottom: 1px solid var(--border); gap: 16px; }
@@ -159,6 +159,8 @@ nav { display: flex; align-items: center; justify-content: space-between; paddin
 .coa-current { display: inline-block; font-size: 10px; font-weight: 700; background: #DCFCE7; color: #166534; padding: 2px 8px; border-radius: 100px; margin-left: 8px; letter-spacing: 0.04em; }
 .coa-btn { font-size: 12px; font-weight: 600; color: var(--accent); background: none; border: 1px solid var(--accent); padding: 6px 14px; border-radius: var(--radius); cursor: pointer; font-family: 'Inter', sans-serif; white-space: nowrap; }
 .coa-btn:hover { background: var(--accent); color: #fff; }
+.coa-download { font-size: 13px; font-weight: 600; color: var(--accent); text-decoration: none; white-space: nowrap; padding: 6px 14px; border: 1px solid var(--accent); border-radius: 6px; }
+.coa-download:hover { background: var(--accent); color: #fff; }
 
 /* ── Product detail page ─────────────────────────────────── */
 .product-page { padding: 48px 48px; }
@@ -902,16 +904,42 @@ function renderGrid() {
 function renderLabReports() {
   var el = document.getElementById('lab-reports-content');
   if (!el) return;
+
+  var CAT_COLOURS = {
+    'Metabolic Research': '#D97706',
+    'Cognitive Research': '#2563EB',
+    'Longevity Research': '#16A34A',
+    'Growth Research':    '#7C3AED'
+  };
+  var CAT_BG = {
+    'Metabolic Research': '#FEF3C7',
+    'Cognitive Research': '#EFF6FF',
+    'Longevity Research': '#F0FDF4',
+    'Growth Research':    '#F5F3FF'
+  };
+
+  // Sort products alphabetically by name then dose
+  var sorted = PRODUCTS.slice().sort(function(a, b) {
+    if (a.name < b.name) return -1;
+    if (a.name > b.name) return 1;
+    return a.dose.localeCompare(b.dose);
+  });
+
   var out = '';
-  for (var i = 0; i < PRODUCTS.length; i++) {
-    var p = PRODUCTS[i];
+  for (var i = 0; i < sorted.length; i++) {
+    var p = sorted[i];
+    var realIdx = PRODUCTS.indexOf(p);
+    var col = CAT_COLOURS[p.category] || '#3B6FD4';
+    var bg  = CAT_BG[p.category]      || '#EEF3FB';
     out += '<div class="lab-product">';
     out += '<div class="lab-product-header">';
-    out += '<div class="lab-product-name">' + p.name + '<span>' + p.dose + '</span></div>';
-    out += '<button class="lab-view-product" onclick="openModal(' + i + ');showPage(\'shop\')">View product</button>';
+    out += '<div style="display:flex;align-items:center;gap:12px;">';
+    out += '<span class="lab-cat-pill" style="color:' + col + ';background:' + bg + '">' + p.category + '</span>';
+    out += '<div class="lab-product-name">' + p.name + ' <span style="color:var(--muted);font-weight:400">' + p.dose + '</span></div>';
+    out += '</div>';
     out += '</div>';
     if (p.coasOnRequest) {
-      out += '<div class="coa-on-request"><p><strong>Available on request.</strong> This product is tested to the same standard. Contact us with your batch number and we\'ll send it over.</p></div>';
+      out += '<div class="coa-on-request" style="padding:16px 20px;font-size:13px;color:var(--muted)"><strong>Available on request.</strong> Contact us with your batch number.</div>';
     } else if (p.coas && p.coas.length) {
       out += '<div class="coa-list">';
       for (var j = 0; j < p.coas.length; j++) {
@@ -930,6 +958,7 @@ function renderLabReports() {
   }
   el.innerHTML = out;
 }
+
 
 // ── Modal ──
 function openModal(idx) {
