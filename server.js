@@ -344,16 +344,13 @@ const server = http.createServer(async (req, res) => {
       return res.end(loginPage());
     }
     if (method === 'POST') {
-      const data = await body(req);
-      // Also try form-encoded
-      let pass = data.password;
-      if (!pass) {
-        // parse form body
-        const raw = await new Promise(r => {
-          let d=''; req.on('data',c=>d+=c); req.on('end',()=>r(d));
-        });
-        pass = new URLSearchParams(raw).get('password');
-      }
+      // Read raw body once, then try JSON then form-encoded
+      const raw = await new Promise(r => {
+        let d=''; req.on('data',c=>d+=c); req.on('end',()=>r(d));
+      });
+      let pass = null;
+      try { pass = JSON.parse(raw).password; } catch {}
+      if (!pass) pass = new URLSearchParams(raw).get('password');
       if (pass === ADMIN_PASS) {
         const token = createSession();
         res.writeHead(302, {
