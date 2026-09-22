@@ -70,12 +70,12 @@ nav { display: flex; align-items: center; justify-content: space-between; paddin
 .hero-coa-title { font-family: 'Fraunces', serif; font-size: clamp(28px, 3vw, 40px); font-weight: 300; letter-spacing: -1px; color: #111; line-height: 1.1; }
 .hero-coa-sub { font-size: 13px; color: var(--muted); line-height: 1.65; max-width: 320px; }
 .hero-coa-list { display: flex; flex-direction: column; gap: 0; border: 1px solid #DDE6F5; border-radius: 10px; overflow: hidden; background: #fff; box-shadow: 0 1px 4px rgba(59,111,212,.06); }
-.hero-coa-row { display: grid; grid-template-columns: 1fr 1fr 1fr; align-items: center; gap: 0; padding: 13px 18px; border-bottom: 1px solid #EEF3FB; cursor: default; }
+.hero-coa-row { display: grid; grid-template-columns: 2fr 1.5fr 1fr 0.8fr; align-items: center; gap: 0; padding: 13px 18px; border-bottom: 1px solid #EEF3FB; cursor: default; }
 .hero-coa-row:last-child { border-bottom: none; }
 .hero-coa-row:hover { background: #F4F7FF; }
 .hero-coa-product { font-size: 13px; font-weight: 600; color: #111; }
 .hero-coa-meta { font-size: 13px; color: var(--muted); text-align: center; }
-.hero-coa-purity { font-size: 13px; font-weight: 600; color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
+.hero-coa-purity { font-size: 13px; font-weight: 700; color: #16A34A; text-align: right; font-variant-numeric: tabular-nums; }
 .hero-coa-all-btn { display: flex; align-items: center; gap: 8px; background: #fff; border: 1px solid #DDE6F5; color: var(--accent); padding: 11px 18px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; transition: all .15s; width: fit-content; }
 .hero-coa-all-btn:hover { border-color: var(--accent); background: var(--accent); color: #fff; }
 
@@ -355,36 +355,42 @@ footer { background: #fff; border-top: 1px solid var(--border); padding: 40px 48
       <div class="hero-coa-list">
         <div class="hero-coa-row hero-coa-header-row">
           <div class="hero-coa-col-hd">Product</div>
-          <div class="hero-coa-col-hd" style="text-align:center">Lab</div>
-          <div class="hero-coa-col-hd" style="text-align:right">Date</div>
+          <div class="hero-coa-col-hd">Lab</div>
+          <div class="hero-coa-col-hd">Date</div>
+          <div class="hero-coa-col-hd">Purity</div>
         </div>
         <div class="hero-coa-row">
           <div class="hero-coa-product">Retatrutide 10mg</div>
           <div class="hero-coa-meta">Janoshik</div>
-          <div class="hero-coa-purity">2026-07-31</div>
+          <div class="hero-coa-meta">2026-07-31</div>
+          <div class="hero-coa-purity">99.64%</div>
         </div>
         <div class="hero-coa-row">
           <div class="hero-coa-product">Semax 10mg</div>
           <div class="hero-coa-meta">Freedom Diagnostics</div>
-          <div class="hero-coa-purity">2026-07-21</div>
+          <div class="hero-coa-meta">2026-07-21</div>
+          <div class="hero-coa-purity">99.54%</div>
         </div>
         <div class="hero-coa-row">
           <div class="hero-coa-product">Selank 10mg</div>
           <div class="hero-coa-meta">Freedom Diagnostics</div>
-          <div class="hero-coa-purity">2026-07-21</div>
+          <div class="hero-coa-meta">2026-07-21</div>
+          <div class="hero-coa-purity">99.43%</div>
         </div>
         <div class="hero-coa-row">
           <div class="hero-coa-product">NAD+ 1000mg</div>
           <div class="hero-coa-meta">Freedom Diagnostics</div>
-          <div class="hero-coa-purity">2026-07-25</div>
+          <div class="hero-coa-meta">2026-07-25</div>
+          <div class="hero-coa-purity">99.96%</div>
         </div>
         <div class="hero-coa-row">
           <div class="hero-coa-product">MOTS-c 10mg</div>
           <div class="hero-coa-meta">Janoshik</div>
-          <div class="hero-coa-purity">2026-07-31</div>
+          <div class="hero-coa-meta">2026-07-31</div>
+          <div class="hero-coa-purity">99.79%</div>
         </div>
       </div>
-      <button class="hero-coa-all-btn" onclick="showPage('lab')">
+      <button class="hero-coa-all-btn"<button class="hero-coa-all-btn" onclick="showPage('lab')">
         View all lab reports
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
       </button>
