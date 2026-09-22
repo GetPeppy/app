@@ -70,12 +70,12 @@ nav { display: flex; align-items: center; justify-content: space-between; paddin
 .hero-coa-title { font-family: 'Fraunces', serif; font-size: clamp(28px, 3vw, 40px); font-weight: 300; letter-spacing: -1px; color: #111; line-height: 1.1; }
 .hero-coa-sub { font-size: 13px; color: var(--muted); line-height: 1.65; max-width: 320px; }
 .hero-coa-list { display: flex; flex-direction: column; gap: 0; border: 1px solid #DDE6F5; border-radius: 10px; overflow: hidden; background: #fff; box-shadow: 0 1px 4px rgba(59,111,212,.06); }
-.hero-coa-row { display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 16px; padding: 13px 18px; border-bottom: 1px solid #EEF3FB; transition: background .12s; text-decoration: none; }
+.hero-coa-row { display: grid; grid-template-columns: 1fr 1fr 1fr; align-items: center; gap: 0; padding: 13px 18px; border-bottom: 1px solid #EEF3FB; cursor: default; }
 .hero-coa-row:last-child { border-bottom: none; }
-.hero-coa-row:hover { background: #EEF3FB; }
+.hero-coa-row:hover { background: #F4F7FF; }
 .hero-coa-product { font-size: 13px; font-weight: 600; color: #111; }
-.hero-coa-meta { font-size: 11px; color: var(--muted); white-space: nowrap; }
-.hero-coa-purity { font-size: 13px; font-weight: 700; color: #16A34A; display: flex; align-items: center; gap: 5px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.hero-coa-meta { font-size: 13px; color: var(--muted); text-align: center; }
+.hero-coa-purity { font-size: 13px; font-weight: 600; color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
 .hero-coa-all-btn { display: flex; align-items: center; gap: 8px; background: #fff; border: 1px solid #DDE6F5; color: var(--accent); padding: 11px 18px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; transition: all .15s; width: fit-content; }
 .hero-coa-all-btn:hover { border-color: var(--accent); background: var(--accent); color: #fff; }
 
@@ -129,7 +129,7 @@ nav { display: flex; align-items: center; justify-content: space-between; paddin
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1px; background: var(--border); border: 1px solid var(--border); }
 .product-card { background: var(--surface); cursor: pointer; transition: background 0.12s; display: flex; flex-direction: column; }
 .product-card:hover { background: #FAFAFA; }
-.product-img { aspect-ratio: 1; overflow: hidden; background: #F7F5F2; }
+.product-img { aspect-ratio: 1; overflow: hidden; background: #F7F5F2; width: 100%; }
 .product-img img { width: 100%; height: 100%; object-fit: cover; }
 .product-body { padding: 16px; flex: 1; display: flex; flex-direction: column; }
 .product-cat { font-size: 10px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 6px; }
@@ -272,6 +272,23 @@ footer { background: #fff; border-top: 1px solid var(--border); padding: 40px 48
   .cart-drawer { width: 100%; }
 }
 
+
+.hero-coa-header-row { background: #F0F4FB; }
+.hero-coa-col-hd { font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+
+
+/* ── Shop grid cards ─────────────────────────────────────── */
+.card { background: #fff; cursor: pointer; transition: background 0.12s; display: flex; flex-direction: column; }
+.card:hover { background: #FAFAFA; }
+.card-img { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; background: #F7F5F2; }
+.card-cat { font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; padding: 14px 14px 4px; }
+.card-name { font-family: 'Fraunces', serif; font-size: 17px; font-weight: 400; color: #111; padding: 0 14px 2px; }
+.card-dose { font-size: 12px; color: var(--muted); padding: 0 14px 10px; }
+.card-price { font-family: 'Fraunces', serif; font-size: 18px; font-weight: 400; color: #111; padding: 0 14px 12px; }
+.add-btn { margin: 0 14px 14px; background: #111; color: #fff; border: none; padding: 9px 0; border-radius: var(--radius); font-size: 12px; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; transition: opacity 0.15s; }
+.add-btn:hover { opacity: 0.75; }
+.notify-btn { margin: 0 14px 14px; background: none; color: var(--muted); border: 1px solid var(--border); padding: 9px 0; border-radius: var(--radius); font-size: 12px; font-weight: 500; cursor: pointer; font-family: 'Inter', sans-serif; }
+
 </style>
 </head>
 <body>
@@ -336,41 +353,36 @@ footer { background: #fff; border-top: 1px solid var(--border); padding: 40px 48
         <p class="hero-coa-sub">Every batch tested by accredited third-party labs before it ships.</p>
       </div>
       <div class="hero-coa-list">
-        <a class="hero-coa-row" href="https://app-production-d8fe.up.railway.app/coa/reta-10/NovaLabs_Retatrutide_10mg_Analysis_3P-LeeMcNaughton_Janoshik_2026-07-31.pdf" target="_blank" rel="noopener" aria-label="View COA for Retatrutide 10mg">
+        <div class="hero-coa-row hero-coa-header-row">
+          <div class="hero-coa-col-hd">Product</div>
+          <div class="hero-coa-col-hd" style="text-align:center">Lab</div>
+          <div class="hero-coa-col-hd" style="text-align:right">Date</div>
+        </div>
+        <div class="hero-coa-row">
           <div class="hero-coa-product">Retatrutide 10mg</div>
-          <div class="hero-coa-meta">Janoshik · 2026-07-31</div>
-          <div class="hero-coa-purity">99.64%
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-          </div>
-        </a>
-        <a class="hero-coa-row" href="https://app-production-d8fe.up.railway.app/coa/semax-10/NovaLabs_Semax_10mg_Analysis_Endotoxin_3PPeptidologix_Freedom_20260612.pdf" target="_blank" rel="noopener" aria-label="View COA for Semax 10mg">
+          <div class="hero-coa-meta">Janoshik</div>
+          <div class="hero-coa-purity">2026-07-31</div>
+        </div>
+        <div class="hero-coa-row">
           <div class="hero-coa-product">Semax 10mg</div>
-          <div class="hero-coa-meta">Freedom Diagnostics · 2026-07-21</div>
-          <div class="hero-coa-purity">99.54%
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-          </div>
-        </a>
-        <a class="hero-coa-row" href="https://app-production-d8fe.up.railway.app/coa/selank-10/NovaLabs_Selank_10mg_Analysis_Endotoxin_3PPeptidologix_Freedom_20260612.pdf" target="_blank" rel="noopener" aria-label="View COA for Selank 10mg">
+          <div class="hero-coa-meta">Freedom Diagnostics</div>
+          <div class="hero-coa-purity">2026-07-21</div>
+        </div>
+        <div class="hero-coa-row">
           <div class="hero-coa-product">Selank 10mg</div>
-          <div class="hero-coa-meta">Freedom Diagnostics · 2026-07-21</div>
-          <div class="hero-coa-purity">99.43%
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-          </div>
-        </a>
-        <a class="hero-coa-row" href="https://app-production-d8fe.up.railway.app/coa/nad-1000/NovaLabs_NAD_1000mg_Analysis_Endotoxin_3PPeptidologix_Freedom_20260610.pdf" target="_blank" rel="noopener" aria-label="View COA for NAD+ 1000mg">
+          <div class="hero-coa-meta">Freedom Diagnostics</div>
+          <div class="hero-coa-purity">2026-07-21</div>
+        </div>
+        <div class="hero-coa-row">
           <div class="hero-coa-product">NAD+ 1000mg</div>
-          <div class="hero-coa-meta">Freedom Diagnostics · 2026-07-25</div>
-          <div class="hero-coa-purity">99.96%
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-          </div>
-        </a>
-        <a class="hero-coa-row" href="https://app-production-d8fe.up.railway.app/coa/mots-c-10/NovaLabs_MOTSc_10mg_Analysis_3P-LeeMcNaughton_Janoshik_2026-06-17.pdf" target="_blank" rel="noopener" aria-label="View COA for MOTS-c 10mg">
+          <div class="hero-coa-meta">Freedom Diagnostics</div>
+          <div class="hero-coa-purity">2026-07-25</div>
+        </div>
+        <div class="hero-coa-row">
           <div class="hero-coa-product">MOTS-c 10mg</div>
-          <div class="hero-coa-meta">Janoshik · 2026-07-31</div>
-          <div class="hero-coa-purity">99.79%
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-          </div>
-        </a>
+          <div class="hero-coa-meta">Janoshik</div>
+          <div class="hero-coa-purity">2026-07-31</div>
+        </div>
       </div>
       <button class="hero-coa-all-btn" onclick="showPage('lab')">
         View all lab reports
