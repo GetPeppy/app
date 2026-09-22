@@ -114,11 +114,11 @@ nav { display: flex; align-items: center; justify-content: space-between; paddin
 /* ── Category tiles ──────────────────────────────────────── */
 .cats-section { padding: 72px 48px; background: #fff; border-bottom: 1px solid var(--border); }
 .cats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 40px; }
-.cat-tile { border: 1px solid var(--border); border-radius: 6px; padding: 28px 24px; cursor: pointer; transition: border-color 0.15s, box-shadow 0.15s; background: #fff; text-align: left; }
+.cat-tile { border: 1px solid var(--border); border-radius: 8px; padding: 28px 24px; cursor: pointer; transition: border-color 0.15s, box-shadow 0.15s; background: #fff; text-align: left; }
 .cat-tile:hover { border-color: #111; box-shadow: 0 0 0 1px #111; }
-.cat-tile-dot { width: 12px; height: 12px; border-radius: 50%; margin-bottom: 14px; }
-.cat-tile-name { font-size: 14px; font-weight: 600; color: #111; margin-bottom: 4px; }
-.cat-tile-count { font-size: 12px; color: var(--muted); }
+.cat-tile-pill { display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; padding: 4px 10px; border-radius: 4px; margin-bottom: 14px; }
+.cat-tile-name { font-family: 'Fraunces', serif; font-size: 22px; font-weight: 300; color: #111; margin-bottom: 6px; letter-spacing: -0.3px; }
+.cat-tile-count { font-size: 13px; color: var(--muted); }
 
 /* ── Shop section ────────────────────────────────────────── */
 .shop-section { padding: 48px 48px; }
@@ -423,22 +423,22 @@ footer { background: #fff; border-top: 1px solid var(--border); padding: 40px 48
     </div>
     <div class="cats-grid">
       <div class="cat-tile" onclick="showPage('shop');setFilter('Metabolic Research',document.querySelector('.filter-btn[onclick*=Metabolic]'))">
-        <div class="cat-tile-dot" style="background:#D97706" aria-hidden="true"></div>
+        <span class="cat-tile-pill" style="color:#D97706;background:#FEF3C7">Metabolic Research</span>
         <p class="cat-tile-name">Metabolic Research</p>
         <p class="cat-tile-count">GLP-1 & weight management</p>
       </div>
       <div class="cat-tile" onclick="showPage('shop');setFilter('Cognitive Research',document.querySelector('.filter-btn[onclick*=Cognitive]'))">
-        <div class="cat-tile-dot" style="background:#2563EB" aria-hidden="true"></div>
+        <span class="cat-tile-pill" style="color:#2563EB;background:#EFF6FF">Cognitive Research</span>
         <p class="cat-tile-name">Cognitive Research</p>
         <p class="cat-tile-count">Focus, mood & neuroprotection</p>
       </div>
       <div class="cat-tile" onclick="showPage('shop');setFilter('Longevity Research',document.querySelector('.filter-btn[onclick*=Longevity]'))">
-        <div class="cat-tile-dot" style="background:#16A34A" aria-hidden="true"></div>
+        <span class="cat-tile-pill" style="color:#16A34A;background:#F0FDF4">Longevity Research</span>
         <p class="cat-tile-name">Longevity Research</p>
         <p class="cat-tile-count">NAD+, GLOW, KLOW & more</p>
       </div>
       <div class="cat-tile" onclick="showPage('shop');setFilter('Growth Research',document.querySelector('.filter-btn[onclick*=Growth]'))">
-        <div class="cat-tile-dot" style="background:#7C3AED" aria-hidden="true"></div>
+        <span class="cat-tile-pill" style="color:#7C3AED;background:#F5F3FF">Growth Research</span>
         <p class="cat-tile-name">Growth Research</p>
         <p class="cat-tile-count">GH secretagogues & peptides</p>
       </div>
