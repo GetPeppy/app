@@ -1153,7 +1153,7 @@ function showProduct(idx) {
 document.addEventListener('keydown', function(e){ if (e.key === 'Escape') { closeModal(); closeCart(); } });
 renderGrid();
 // Run on initial load
-refreshFeatured();
+document.addEventListener("DOMContentLoaded", function() { refreshFeatured(); });
 </script>
 
 <!-- Notify Me Modal -->
