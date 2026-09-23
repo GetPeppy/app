@@ -1453,32 +1453,21 @@ async function lookupOrder() {
       + '</div>';
   } catch(e) { el.innerHTML='<p style="color:#EF4444">Error: '+e.message+'</p>'; }
 }
-var _accountPageState = null; // 'logged-in', 'logged-out'
-async function renderAccountPage() {
+function renderAccountPageForm() {
   var el = document.getElementById('account-content');
-  if (!el) return;
-  try {
-    var me;
-    if (_customerName) {
-      me = { ok: true, name: _customerName };
-    } else {
-      me = await fetch('/api/account/me').then(function(r){return r.json();});
-    }
-    if (!me.ok) {
-      // Only re-render the not-logged-in form if not already showing
-      if (_accountPageState === 'logged-out') return;
-      _accountPageState = 'logged-out';
-      el.innerHTML = '<h1 style="font-family:Fraunces,serif;font-size:32px;font-weight:300;margin-bottom:8px">My Account</h1>'
-        + '<p style="font-size:14px;color:var(--muted);margin-bottom:36px">Sign in to track your orders, or create a new account.</p>'
+  if (!el || document.getElementById('acc-login-email')) return;
+  el.innerHTML = '<h1 style="font-family:Fraunces,serif;font-size:32px;font-weight:300;margin-bottom:8px">My Account</h1>'
+        + '<p style="font-size:14px;color:var(--muted);margin-bottom:36px">Sign in to track your orders or create a new account.</p>'
         + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;max-width:680px">'
         + '<div style="background:#fff;border:1px solid #E8E8E8;border-radius:10px;padding:32px">'
         + '<p style="font-size:11px;font-weight:700;letter-spacing:.10em;text-transform:uppercase;color:var(--accent);margin-bottom:8px">Existing Customer</p>'
         + '<h2 style="font-family:Fraunces,serif;font-size:22px;font-weight:300;margin-bottom:24px;color:#111">Sign In</h2>'
         + '<div style="margin-bottom:14px"><label style="display:block;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#666;margin-bottom:6px">Email</label>'
-        + '<input id="acc-login-email" type="email" placeholder="you@example.com" style="width:100%;padding:11px 14px;border:1px solid #E0E0E0;border-radius:6px;font-size:14px;font-family:Inter,sans-serif;outline:none;box-sizing:border-box"></div>'
+        + '<input id="acc-login-email" type="email" autocomplete="username" placeholder="your@email.com" style="width:100%;padding:11px 14px;border:1px solid #E0E0E0;border-radius:6px;font-size:14px;font-family:Inter,sans-serif;outline:none;box-sizing:border-box"></div>'
         + '<div style="margin-bottom:22px"><label style="display:block;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#666;margin-bottom:6px">Password</label>'
-        + '<input id="acc-login-pw" type="password" placeholder="Your password" style="width:100%;padding:11px 14px;border:1px solid #E0E0E0;border-radius:6px;font-size:14px;font-family:Inter,sans-serif;outline:none;box-sizing:border-box"></div>'
-        + '<div id="login-error" style="display:none;color:#EF4444;font-size:13px;margin-bottom:12px;padding:10px;background:#FEF2F2;border-radius:6px"></div>' + '<button onclick="accountLogin()" style="width:100%;padding:13px;background:var(--accent);color:#fff;border:none;border-radius:7px;font-size:14px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">Sign In</button>'
+        + '<input id="acc-login-pw" type="password" autocomplete="current-password" placeholder="Your password" style="width:100%;padding:11px 14px;border:1px solid #E0E0E0;border-radius:6px;font-size:14px;font-family:Inter,sans-serif;outline:none;box-sizing:border-box"></div>'
+        + '<div id="login-error" style="display:none;color:#EF4444;font-size:13px;margin-bottom:12px;padding:10px;background:#FEF2F2;border-radius:6px"></div>'
+        + '<button onclick="accountLogin()" style="width:100%;padding:13px;background:var(--accent);color:#fff;border:none;border-radius:7px;font-size:14px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">Sign In</button>'
         + '</div>'
         + '<div style="background:#F7F9FF;border:1px solid #DDE6F5;border-radius:10px;padding:32px">'
         + '<p style="font-size:11px;font-weight:700;letter-spacing:.10em;text-transform:uppercase;color:var(--accent);margin-bottom:8px">New Customer</p>'
@@ -1486,16 +1475,34 @@ async function renderAccountPage() {
         + '<div style="margin-bottom:14px"><label style="display:block;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#666;margin-bottom:6px">Full Name</label>'
         + '<input id="acc-reg-name" placeholder="John Smith" style="width:100%;padding:11px 14px;border:1px solid #E0E0E0;border-radius:6px;font-size:14px;font-family:Inter,sans-serif;outline:none;box-sizing:border-box"></div>'
         + '<div style="margin-bottom:14px"><label style="display:block;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#666;margin-bottom:6px">Email</label>'
-        + '<input id="acc-reg-email" type="email" placeholder="you@example.com" style="width:100%;padding:11px 14px;border:1px solid #E0E0E0;border-radius:6px;font-size:14px;font-family:Inter,sans-serif;outline:none;box-sizing:border-box"></div>'
+        + '<input id="acc-reg-email" type="email" placeholder="your@email.com" style="width:100%;padding:11px 14px;border:1px solid #E0E0E0;border-radius:6px;font-size:14px;font-family:Inter,sans-serif;outline:none;box-sizing:border-box"></div>'
         + '<div style="margin-bottom:22px"><label style="display:block;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#666;margin-bottom:6px">Password</label>'
         + '<input id="acc-reg-pw" type="password" placeholder="Min 8 characters" style="width:100%;padding:11px 14px;border:1px solid #E0E0E0;border-radius:6px;font-size:14px;font-family:Inter,sans-serif;outline:none;box-sizing:border-box"></div>'
-        + '<div id="reg-error" style="display:none;color:#EF4444;font-size:13px;margin-bottom:12px;padding:10px;background:#FEF2F2;border-radius:6px"></div>' + '<button onclick="accountRegister()" style="width:100%;padding:13px;background:#111;color:#fff;border:none;border-radius:7px;font-size:14px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">Create Account</button>'
+        + '<div id="reg-error" style="display:none;color:#EF4444;font-size:13px;margin-bottom:12px;padding:10px;background:#FEF2F2;border-radius:6px"></div>'
+        + '<button onclick="accountRegister()" style="width:100%;padding:13px;background:#111;color:#fff;border:none;border-radius:7px;font-size:14px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">Create Account</button>'
         + '</div></div>';
-      return;
+}
+async function renderAccountPage() {
+  var el = document.getElementById('account-content');
+  if (!el) return;
+  // If we know the user is logged in, render dashboard immediately
+  if (_customerName) {
+    await renderDashboard(el, _customerName);
+    return;
+  }
+  // Show sign-in form immediately (no network wait)
+  renderAccountPageForm();
+  // Check session in background - if logged in, upgrade to dashboard
+  try {
+    var me = await fetch('/api/account/me').then(function(r){return r.json();});
+    if (me.ok) {
+      _customerName = me.name;
+      await renderDashboard(el, me.name);
     }
-    _customerName = me.name;
-    _accountPageState = 'logged-in';
-    var orders = await fetch('/api/account/orders').then(function(r){return r.json();});
+  } catch(e) {}
+}
+async function renderDashboard(el, name) {
+  var orders = await fetch('/api/account/orders').then(function(r){return r.json();});
     var STATUS_COLOR={submitted:'#3B6FD4',received:'#D97706',payment_confirmed:'#16A34A',shipped:'#7C3AED',delivered:'#16A34A',cancelled:'#EF4444'};
     var STATUS_LABEL={submitted:'Submitted',received:'Received',payment_confirmed:'Payment Confirmed',shipped:'Shipped',delivered:'Delivered',cancelled:'Cancelled'};
     var ordersHtml = orders.length===0 ? '<p style="color:#888;padding:24px">No orders yet.</p>'
@@ -1573,66 +1580,8 @@ async function renderAccountPage() {
       + '</div></div>'
   // Wire track buttons
   document.querySelectorAll('.acct-track-btn').forEach(function(b){ b.onclick = function(){ showPage('track'); document.getElementById('track-ref').value=this.dataset.ref; lookupOrder(); }; });
-  } catch(e) { el.innerHTML='<p style="color:#EF4444">Error loading account: '+e.message+'</p>'; }
-}
-async function changePassword() {
-  var cur  = (document.getElementById('cp-current')||{}).value||'';
-  var nw   = (document.getElementById('cp-new')||{}).value||'';
-  var conf = (document.getElementById('cp-confirm')||{}).value||'';
-  var errEl = document.getElementById('cp-error');
-  if (!cur||!nw||!conf) { if(errEl){errEl.textContent='All fields required';errEl.style.display='block';} return; }
-  if (nw !== conf) { if(errEl){errEl.textContent='New passwords do not match';errEl.style.display='block';} return; }
-  if (nw.length < 6) { if(errEl){errEl.textContent='Password must be at least 6 characters';errEl.style.display='block';} return; }
-  if (errEl) errEl.style.display='none';
-  var r = await fetch('/api/account/change-password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({current_password:cur,new_password:nw})});
-  var d = await r.json();
-  if (d.ok) { showToast('Password updated successfully!'); document.getElementById('cp-current').value=''; document.getElementById('cp-new').value=''; document.getElementById('cp-confirm').value=''; }
-  else { if(errEl){errEl.textContent=d.error||'Error updating password';errEl.style.display='block';} }
-}
-
-async function accountLogin() {
-  var emailEl = document.getElementById('acc-login-email');
-  var pwEl    = document.getElementById('acc-login-pw');
-  var email   = emailEl ? emailEl.value.trim() : '';
-  var pw      = pwEl    ? pwEl.value          : '';
-  var errEl = document.getElementById('login-error');
-  if (!email||!pw) {
-    if (errEl) { errEl.textContent='Please enter your email and password.'; errEl.style.display='block'; }
-    return;
-  }
-  var btn = document.querySelector('button[onclick="accountLogin()"]');
-  if (btn) { btn.textContent='Signing in...'; btn.disabled=true; }
-  if (errEl) errEl.style.display='none';
-  try {
-    var r = await fetch('/api/account/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:email,password:pw})});
-    var d = await r.json();
-    if (!d.ok) {
-      if (errEl) { errEl.textContent=d.error||'Invalid email or password.'; errEl.style.display='block'; }
-      if (btn) { btn.textContent='Sign In'; btn.disabled=false; }
-      return;
-    }
-    _customerName = d.name;
-    showPage('account');
-    renderAccountPage();
-  } catch(err) {
-    if (errEl) { errEl.textContent='Connection error. Please try again.'; errEl.style.display='block'; }
-    if (btn) { btn.textContent='Sign In'; btn.disabled=false; }
-  }
-}
-function showLoginError(msg) {
-  var el = document.getElementById('login-error');
-  if (el) { el.textContent=msg; el.style.display='block'; }
-}
-async function accountRegister() {
-  var name  = (document.getElementById('acc-reg-name')||{}).value||'';
-  var email = (document.getElementById('acc-reg-email')||{}).value||'';
-  var pw    = (document.getElementById('acc-reg-pw')||{}).value||'';
-  var r = await fetch('/api/account/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,email,password:pw})});
-  var d = await r.json();
-  if (!d.ok) { var e2=document.getElementById('reg-error'); if(e2){e2.textContent=d.error||'Registration failed';e2.style.display='block';} return; }
-  _customerName = name;
-  renderAccountPage();
-}
+  
+} 
 async function accountLogout() {
   await fetch('/api/account/logout',{method:'POST'});
   _customerName = null;
