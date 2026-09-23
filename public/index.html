@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-<!-- Peppy v2 - cart fix build -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -330,6 +329,53 @@ footer { background: #fff; border-top: 1px solid var(--border); padding: 40px 48
 .card-dose { font-size: 12px; color: var(--muted); padding: 0 14px 12px; }
 .card-price { font-family: 'Fraunces', serif; font-size: 20px; font-weight: 400; color: #111; padding: 0 14px 14px; }
 
+
+/* ── Checkout ─────────────────────────────────────────────── */
+.checkout-layout { display:grid;grid-template-columns:1fr 400px;gap:48px;align-items:start; }
+.checkout-heading { font-family:'Fraunces',serif;font-size:22px;font-weight:300;letter-spacing:-0.5px;margin-bottom:20px;color:#111; }
+.form-row-2 { display:grid;grid-template-columns:1fr 1fr;gap:16px; }
+.form-row-3 { display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px; }
+.pay-methods { display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px; }
+.pay-opt { border:1px solid #E8E8E8;border-radius:8px;padding:14px 16px;cursor:pointer;transition:all .15s; }
+.pay-opt.active { border-color:#3B6FD4;background:#EEF3FB; }
+.pay-opt-name { font-size:14px;font-weight:600;color:#111; }
+.pay-opt-sub { font-size:11px;color:#888;margin-top:3px; }
+.co-submit-btn { width:100%;padding:16px;background:#3B6FD4;color:#fff;border:none;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer;margin-top:24px;font-family:'Inter',sans-serif;transition:opacity .15s; }
+.co-submit-btn:hover { opacity:.88; }
+.co-submit-btn:disabled { opacity:.5;cursor:not-allowed; }
+.co-legal { font-size:11px;color:#888;margin-top:12px;line-height:1.6;text-align:center; }
+.checkout-summary-col { background:#F7F9FF;border-radius:10px;padding:28px;border:1px solid #DDE6F5;position:sticky;top:80px; }
+.co-items { margin-bottom:16px;border-bottom:1px solid #DDE6F5;padding-bottom:16px; }
+.co-item { display:flex;justify-content:space-between;font-size:13px;color:#555;margin-bottom:8px; }
+.co-totals { display:flex;flex-direction:column;gap:8px; }
+.co-total-row { display:flex;justify-content:space-between;font-size:13px;color:#555; }
+.co-grand { font-size:18px;font-weight:700;color:#111;padding-top:10px;border-top:1px solid #DDE6F5;margin-top:4px; }
+/* ── Confirmation ─────────────────────────────────────────── */
+.confirm-box { text-align:center;padding:40px 0; }
+.confirm-icon { width:64px;height:64px;background:#16A34A;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:28px;margin:0 auto 20px; }
+.confirm-title { font-family:'Fraunces',serif;font-size:36px;font-weight:300;margin-bottom:8px; }
+.confirm-ref { font-size:16px;color:#555;margin-bottom:12px; }
+.confirm-sub { font-size:14px;color:#888;margin-bottom:32px;line-height:1.6; }
+.confirm-pay { background:#F7F9FF;border:1px solid #DDE6F5;border-radius:10px;padding:24px;margin-bottom:24px;text-align:left; }
+.confirm-pay-label { font-size:14px;color:#555;margin-bottom:10px; }
+.confirm-pay-addr { font-family:monospace;font-size:13px;background:#fff;border:1px solid #DDE6F5;border-radius:6px;padding:12px;word-break:break-all;color:#111; }
+.confirm-track { background:#fff;border:1px solid #E8E8E8;border-radius:10px;padding:24px;margin-bottom:24px;text-align:left; }
+.confirm-track h3 { font-size:15px;font-weight:700;margin-bottom:6px; }
+.confirm-track p { font-size:13px;color:#888; }
+.confirm-track-btn { margin-top:14px;background:none;border:1px solid #3B6FD4;color:#3B6FD4;padding:10px 20px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif; }
+/* ── Track result ─────────────────────────────────────────── */
+.track-order-card { background:#fff;border:1px solid #E8E8E8;border-radius:10px;overflow:hidden; }
+.track-header { padding:20px 24px;border-bottom:1px solid #E8E8E8;display:flex;justify-content:space-between;align-items:center; }
+.track-steps { padding:24px; }
+.track-step { display:flex;gap:16px;align-items:flex-start;margin-bottom:20px; }
+.track-dot { width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;margin-top:2px; }
+.track-dot.done { background:#16A34A;color:#fff; }
+.track-dot.active { background:#3B6FD4;color:#fff; }
+.track-dot.pending { background:#F3F4F6;color:#9CA3AF;border:2px solid #E5E7EB; }
+.track-step-label { font-size:14px;font-weight:600;color:#111; }
+.track-step-sub { font-size:12px;color:#888;margin-top:2px; }
+@media(max-width:768px){.checkout-layout{grid-template-columns:1fr}.form-row-2,.form-row-3{grid-template-columns:1fr}.pay-methods{grid-template-columns:1fr}}
+
 </style>
 </head>
 <body>
@@ -341,6 +387,8 @@ footer { background: #fff; border-top: 1px solid var(--border); padding: 40px 48
     <li><a onclick="showPage('shop')" id="nav-shop">Shop</a></li>
     <li><a onclick="showPage('lab')" id="nav-lab">Lab Reports</a></li>
     <li><a onclick="showPage('faq')" id="nav-faq">FAQ</a></li>
+      <li><a onclick="showPage('track')" id="nav-track">Track Order</a></li>
+      <li><a onclick="showPage('account');renderAccountPage()" id="nav-account">My Account</a></li>
   </ul>
   <button class="nav-cart" id="cart-btn" onclick="openCart()">Cart (0)</button>
 </nav>
@@ -841,6 +889,8 @@ function showPage(name) {
   }
   if (name === 'home') { refreshFeatured(); }
   if (name === 'lab') renderLabReports();
+  if (name === 'checkout') renderCheckout();
+  if (name === 'account') renderAccountPage();
   if (name === 'product') {}
 }
 
@@ -1119,7 +1169,13 @@ function renderCart() {
     out += '</div></div>';
   });
   itemsEl.innerHTML = out;
-  if (totalEl) totalEl.textContent = 'CA$' + total;
+  var shipping = total >= 500 ? 0 : 25;
+  var grandTotal = total + shipping;
+  var subtotalEl = document.getElementById('cart-subtotal-amt');
+  var shippingEl = document.getElementById('cart-shipping-amt');
+  if (subtotalEl) subtotalEl.textContent = 'CA$' + total;
+  if (shippingEl) shippingEl.textContent = shipping === 0 ? 'Free (over CA$500)' : 'CA$25';
+  if (totalEl) totalEl.textContent = 'CA$' + grandTotal;
   if (footerEl) footerEl.style.display = 'block';
 }
 
@@ -1196,6 +1252,228 @@ document.addEventListener('keydown', function(e){ if (e.key === 'Escape') { clos
 renderGrid();
 // Run on initial load
 document.addEventListener("DOMContentLoaded", function() { refreshFeatured(); });
+
+// ── Checkout & Account ────────────────────────────────────────────────────────
+var _payMethod = 'usdc';
+var _customerName = null;
+
+function openCheckout() {
+  closeCart();
+  renderCheckout();
+  showPage('checkout');
+}
+function getCartItems() {
+  return Object.keys(cart).map(function(id) {
+    var p = PRODUCTS.find(function(x){ return x.id===id; });
+    return p ? {id:p.id,name:p.name,dose:p.dose,price:p.price,qty:cart[id]||1} : null;
+  }).filter(Boolean);
+}
+function getCartSubtotal() {
+  return Object.keys(cart).reduce(function(t,id){
+    var p = PRODUCTS.find(function(x){ return x.id===id; });
+    return t + (p ? p.price*(cart[id]||1) : 0);
+  }, 0);
+}
+function renderCheckout() {
+  var sub = getCartSubtotal();
+  var ship = sub >= 500 ? 0 : 25;
+  var total = sub + ship;
+  var el = document.getElementById('checkout-content');
+  if (!el) return;
+  var provinces = ['AB','BC','MB','NB','NL','NS','NT','NU','ON','PE','QC','SK','YT'];
+  var provOpts = '<option value="">Select province</option>' + provinces.map(function(p){ return '<option>'+p+'</option>'; }).join('');
+  var payMethods = ['usdc','btc','etransfer'];
+  var payLabels = {usdc:'USDC',btc:'Bitcoin',etransfer:'e-Transfer'};
+  var paySubLabels = {usdc:'USD Coin (Ethereum)',btc:'BTC on-chain',etransfer:'Canadian banks'};
+  var payHtml = '<div class="pay-methods">' + payMethods.map(function(m,i){
+    return '<div class="pay-opt'+(i===0?' active':'')+'" onclick="selectPay(this,\''+m+'\')" ><div class="pay-opt-name">'+payLabels[m]+'</div><div class="pay-opt-sub">'+paySubLabels[m]+'</div></div>';
+  }).join('') + '</div>';
+  var itemsHtml = getCartItems().map(function(i){ return '<div class="co-item"><span>'+i.name+' '+i.dose+' ×'+i.qty+'</span><span>CA$'+(i.price*i.qty)+'</span></div>'; }).join('');
+  el.innerHTML = '<div class="checkout-layout"><div class="checkout-form-col">'
+    + '<h2 class="checkout-heading">Contact & Shipping</h2>'
+    + '<div class="form-row-2"><div class="form-row"><label>Full Name *</label><input id="co-name" placeholder="John Smith"></div>'
+    + '<div class="form-row"><label>Email *</label><input id="co-email" type="email" placeholder="you@example.com"></div></div>'
+    + '<div class="form-row"><label>Phone</label><input id="co-phone" placeholder="+1 (555) 000-0000"></div>'
+    + '<div class="form-row"><label>Street Address *</label><input id="co-address" placeholder="123 Main St"></div>'
+    + '<div class="form-row-3"><div class="form-row"><label>City *</label><input id="co-city" placeholder="Vancouver"></div>'
+    + '<div class="form-row"><label>Province *</label><select id="co-province">'+provOpts+'</select></div>'
+    + '<div class="form-row"><label>Postal Code *</label><input id="co-postal" placeholder="V6B 1A1"></div></div>'
+    + '<h2 class="checkout-heading" style="margin-top:28px">Payment Method</h2>'
+    + payHtml
+    + (_customerName ? '<p style="font-size:13px;color:#16A34A;margin-top:4px">✓ Signed in as '+_customerName+'</p>'
+      : '<div style="margin-top:20px;padding:18px;background:#F7F9FF;border-radius:8px;border:1px solid #DDE6F5">'
+      + '<p style="font-size:13px;font-weight:600;margin-bottom:12px">Create an account to track orders (optional)</p>'
+      + '<div class="form-row"><label>Password (optional)</label><input id="co-password" type="password" placeholder="Leave blank to checkout as guest"></div></div>')
+    + '<button class="co-submit-btn" onclick="submitOrder()">Place Order →</button>'
+    + '<p class="co-legal">For research use only. Not for human consumption. By placing this order you confirm you are 21+.</p>'
+    + '</div><div class="checkout-summary-col">'
+    + '<h2 class="checkout-heading">Order Summary</h2>'
+    + '<div class="co-items">'+itemsHtml+'</div>'
+    + '<div class="co-totals">'
+    + '<div class="co-total-row"><span>Subtotal</span><span>CA$'+sub+'</span></div>'
+    + '<div class="co-total-row"><span>Shipping</span><span>'+(ship===0?'Free (over CA$500)':'CA$25')+'</span></div>'
+    + '<div class="co-total-row co-grand"><span>Total</span><span>CA$'+total+'</span></div>'
+    + '</div><div style="margin-top:16px;padding:14px;background:#fff;border-radius:6px;font-size:12px;color:#888;line-height:1.6">Ships across Canada only. Payment instructions shown after order is placed.</div>'
+    + '</div></div>';
+  _payMethod = 'usdc';
+}
+function selectPay(el, method) {
+  document.querySelectorAll('.pay-opt').forEach(function(e){ e.classList.remove('active'); });
+  el.classList.add('active');
+  _payMethod = method;
+}
+async function submitOrder() {
+  var name    = (document.getElementById('co-name')||{}).value||'';
+  var email   = (document.getElementById('co-email')||{}).value||'';
+  var address = (document.getElementById('co-address')||{}).value||'';
+  var city    = (document.getElementById('co-city')||{}).value||'';
+  var prov    = (document.getElementById('co-province')||{}).value||'';
+  var postal  = (document.getElementById('co-postal')||{}).value||'';
+  var phone   = (document.getElementById('co-phone')||{}).value||'';
+  var pw      = (document.getElementById('co-password')||{}).value||'';
+  if (!name.trim()||!email.trim()||!address.trim()||!city.trim()||!prov||!postal.trim()) {
+    alert('Please fill in all required fields.'); return;
+  }
+  var sub = getCartSubtotal();
+  var btn = document.querySelector('.co-submit-btn');
+  if (btn) { btn.textContent='Placing order...'; btn.disabled=true; }
+  try {
+    var r = await fetch('/api/order',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({name:name.trim(),email:email.trim(),address:address.trim(),city:city.trim(),
+        province:prov,postal:postal.trim(),phone:phone.trim(),password:pw,
+        items:getCartItems(),subtotal:sub,payment_method:_payMethod})});
+    var data = await r.json();
+    if (!data.ok) throw new Error(data.error||'Order failed');
+    if (data.sessionToken) {
+      document.cookie='peppy_customer='+data.sessionToken+';path=/;max-age=2592000';
+      _customerName = name.trim();
+    }
+    cart={}; updateCartBtn();
+    showOrderConfirmation(data.ref,data.payment_address,data.total,data.shipping,_payMethod);
+  } catch(e) {
+    alert('Error: '+e.message);
+    if (btn) { btn.textContent='Place Order'; btn.disabled=false; }
+  }
+}
+function showOrderConfirmation(ref, payAddr, total, shipping, method) {
+  showPage('confirmation');
+  var el = document.getElementById('confirmation-content');
+  if (!el) return;
+  var mLabel = {usdc:'USDC (Ethereum)',btc:'Bitcoin',etransfer:'e-Transfer'}[method]||method;
+  el.innerHTML = '<div class="confirm-box">'
+    + '<div class="confirm-icon">✓</div>'
+    + '<h1 class="confirm-title">Order Placed!</h1>'
+    + '<p class="confirm-ref">Order Reference: <strong>'+ref+'</strong></p>'
+    + '<p class="confirm-sub">We've received your order. Please complete payment below and we'll confirm within 1 business day.</p>'
+    + '<div class="confirm-pay"><p class="confirm-pay-label">Send <strong>CA$'+total+'</strong> via '+mLabel+' to:</p>'
+    + '<div class="confirm-pay-addr">'+(payAddr||'Payment address not yet configured — contact us')+'</div>'
+    + '<p style="font-size:12px;color:#888;margin-top:10px">Include <strong>'+ref+'</strong> in your payment memo.</p></div>'
+    + '<div class="confirm-track"><h3>Track Your Order</h3><p>Save this reference number to check your order status at any time:</p>'
+    + '<div style="display:flex;gap:8px;margin-top:12px">'
+    + '<input value="'+ref+'" style="flex:1;padding:10px;border:1px solid #E8E8E8;border-radius:6px;font-family:monospace;font-size:14px;background:#F9F9F9" readonly>'
+    + '<button onclick="navigator.clipboard.writeText(''+ref+'').then(function(){showToast('Copied!')})" style="padding:10px 14px;background:#3B6FD4;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:13px">Copy</button></div>'
+    + '<button class="confirm-track-btn" onclick="showPage('track');document.getElementById('track-ref').value=''+ref+''">Track Order →</button></div>'
+    + '<button onclick="showPage('home')" style="display:inline-block;background:#3B6FD4;color:#fff;padding:14px 36px;font-size:15px;font-weight:700;border:none;border-radius:8px;cursor:pointer;margin-top:20px;font-family:'Inter',sans-serif">Return to Shop</button>'
+    + '</div>';
+}
+async function lookupOrder() {
+  var ref   = (document.getElementById('track-ref')||{}).value||'';
+  var email = (document.getElementById('track-email')||{}).value||'';
+  var el    = document.getElementById('track-result');
+  if (!ref.trim()) { el.innerHTML='<p style="color:#888">Please enter an order reference number.</p>'; return; }
+  el.innerHTML='<p style="color:#888">Looking up order...</p>';
+  try {
+    var r = await fetch('/api/order/'+encodeURIComponent(ref.trim())+'?email='+encodeURIComponent(email.trim()));
+    var d = await r.json();
+    if (!d.ok) { el.innerHTML='<p style="color:#EF4444">Order not found. Check your reference number and try again.</p>'; return; }
+    var o = d.order;
+    var STEPS = [
+      {key:'submitted',label:'Order Submitted',sub:'We received your order'},
+      {key:'received',label:'Order Received',sub:'Our team has reviewed your order'},
+      {key:'payment_confirmed',label:'Payment Confirmed',sub:'Your payment has been verified'},
+      {key:'shipped',label:'Shipped',sub: o.tracking_number ? 'Tracking: '+o.tracking_number : 'Your order is on its way'},
+      {key:'delivered',label:'Delivered',sub:'Order delivered successfully'}
+    ];
+    var statusOrder = ['submitted','received','payment_confirmed','shipped','delivered'];
+    var curIdx = statusOrder.indexOf(o.status);
+    var stepsHtml = STEPS.map(function(s,i){
+      var cls = i < curIdx ? 'done' : (i===curIdx ? 'active' : 'pending');
+      var icon = i < curIdx ? '✓' : (i+1).toString();
+      return '<div class="track-step"><div class="track-dot '+cls+'">'+icon+'</div><div><div class="track-step-label">'+s.label+'</div><div class="track-step-sub">'+s.sub+'</div></div></div>';
+    }).join('');
+    var items = JSON.parse(o.items||'[]');
+    el.innerHTML = '<div class="track-order-card">'
+      + '<div class="track-header"><div><div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#888;margin-bottom:4px">Order Reference</div><div style="font-size:18px;font-weight:700;color:#111">'+o.order_ref+'</div></div>'
+      + '<div style="text-align:right"><div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#888;margin-bottom:4px">Total</div><div style="font-size:18px;font-weight:700;color:#111">CA$'+o.total+'</div></div></div>'
+      + '<div class="track-steps">'+stepsHtml+'</div>'
+      + (o.tracking_number ? '<div style="padding:0 24px 20px"><div style="background:#EFF6FF;border-radius:6px;padding:12px 16px"><span style="font-size:12px;font-weight:600;color:#3B6FD4">TRACKING NUMBER</span><div style="font-size:15px;font-family:monospace;margin-top:4px">'+o.tracking_number+'</div></div></div>' : '')
+      + '</div>';
+  } catch(e) { el.innerHTML='<p style="color:#EF4444">Error: '+e.message+'</p>'; }
+}
+async function renderAccountPage() {
+  var el = document.getElementById('account-content');
+  if (!el) return;
+  try {
+    var me = await fetch('/api/account/me').then(function(r){return r.json();});
+    if (!me.ok) {
+      el.innerHTML = '<h1 style="font-family:Fraunces,serif;font-size:32px;font-weight:300;margin-bottom:24px">My Account</h1>'
+        + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;max-width:600px">'
+        + '<div style="background:#fff;border:1px solid #E8E8E8;border-radius:10px;padding:28px">'
+        + '<h2 style="font-size:16px;font-weight:700;margin-bottom:20px">Sign In</h2>'
+        + '<div class="form-row"><label>Email</label><input id="acc-login-email" type="email"></div>'
+        + '<div class="form-row"><label>Password</label><input id="acc-login-pw" type="password"></div>'
+        + '<button onclick="accountLogin()" style="width:100%;padding:12px;background:#3B6FD4;color:#fff;border:none;border-radius:6px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Sign In</button>'
+        + '</div><div style="background:#fff;border:1px solid #E8E8E8;border-radius:10px;padding:28px">'
+        + '<h2 style="font-size:16px;font-weight:700;margin-bottom:20px">Create Account</h2>'
+        + '<div class="form-row"><label>Name</label><input id="acc-reg-name"></div>'
+        + '<div class="form-row"><label>Email</label><input id="acc-reg-email" type="email"></div>'
+        + '<div class="form-row"><label>Password</label><input id="acc-reg-pw" type="password"></div>'
+        + '<button onclick="accountRegister()" style="width:100%;padding:12px;background:#111;color:#fff;border:none;border-radius:6px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Create Account</button>'
+        + '</div></div>';
+      return;
+    }
+    _customerName = me.name;
+    var orders = await fetch('/api/account/orders').then(function(r){return r.json();});
+    var STATUS_LABEL={submitted:'Submitted',received:'Received',payment_confirmed:'Payment Confirmed',shipped:'Shipped',delivered:'Delivered',cancelled:'Cancelled'};
+    var ordersHtml = orders.length===0 ? '<p style="color:#888;padding:24px">No orders yet.</p>'
+      : '<table style="width:100%;border-collapse:collapse"><thead><tr style="background:#F9F9F9"><th style="padding:12px 16px;text-align:left;font-size:12px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:.05em">Ref</th><th style="padding:12px 16px;text-align:left;font-size:12px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:.05em">Date</th><th style="padding:12px 16px;font-size:12px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:.05em">Total</th><th style="padding:12px 16px;font-size:12px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:.05em">Status</th><th></th></tr></thead><tbody>'
+      + orders.map(function(o){ return '<tr style="border-top:1px solid #F0F0F0"><td style="padding:14px 16px"><span style="font-family:monospace;font-size:13px">'+o.order_ref+'</span></td><td style="padding:14px 16px;font-size:13px;color:#888">'+o.created_at.slice(0,10)+'</td><td style="padding:14px 16px;font-size:14px;font-weight:600">CA$'+(o.total||o.subtotal)+'</td><td style="padding:14px 16px"><span class="badge badge-'+o.status+'">'+(STATUS_LABEL[o.status]||o.status)+'</span></td><td style="padding:14px 16px"><button onclick="showPage('track');document.getElementById('track-ref').value=''+o.order_ref+'';lookupOrder()" style="background:none;border:1px solid #3B6FD4;color:#3B6FD4;padding:5px 12px;border-radius:4px;font-size:12px;font-weight:600;cursor:pointer">Track</button></td></tr>'; }).join('')
+      + '</tbody></table>';
+    el.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:32px">'
+      + '<div><p style="font-size:12px;color:#888;margin-bottom:4px">Signed in as</p><h1 style="font-family:Fraunces,serif;font-size:28px;font-weight:300">'+me.name+'</h1></div>'
+      + '<button onclick="accountLogout()" style="background:none;border:1px solid #E8E8E8;color:#555;padding:8px 16px;border-radius:6px;font-size:13px;cursor:pointer;font-family:Inter,sans-serif">Sign Out</button></div>'
+      + '<div style="background:#fff;border:1px solid #E8E8E8;border-radius:10px;overflow:hidden">'
+      + '<div style="padding:16px 20px;border-bottom:1px solid #E8E8E8"><h2 style="font-size:15px;font-weight:700">My Orders</h2></div>'
+      + ordersHtml + '</div>';
+  } catch(e) { el.innerHTML='<p style="color:#EF4444">Error loading account: '+e.message+'</p>'; }
+}
+async function accountLogin() {
+  var email = (document.getElementById('acc-login-email')||{}).value||'';
+  var pw    = (document.getElementById('acc-login-pw')||{}).value||'';
+  var r = await fetch('/api/account/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password:pw})});
+  var d = await r.json();
+  if (!d.ok) { alert(d.error||'Login failed'); return; }
+  _customerName = d.name;
+  renderAccountPage();
+}
+async function accountRegister() {
+  var name  = (document.getElementById('acc-reg-name')||{}).value||'';
+  var email = (document.getElementById('acc-reg-email')||{}).value||'';
+  var pw    = (document.getElementById('acc-reg-pw')||{}).value||'';
+  var r = await fetch('/api/account/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,email,password:pw})});
+  var d = await r.json();
+  if (!d.ok) { alert(d.error||'Registration failed'); return; }
+  _customerName = name;
+  renderAccountPage();
+}
+async function accountLogout() {
+  await fetch('/api/account/logout',{method:'POST'});
+  _customerName = null;
+  renderAccountPage();
+}
+// Check login status on load
+fetch('/api/account/me').then(function(r){return r.json();}).then(function(d){ if(d.ok) _customerName=d.name; }).catch(function(){});
+
 </script>
 
 <!-- Notify Me Modal -->
@@ -1236,6 +1514,42 @@ document.getElementById('notify-modal').addEventListener('click', function(e) {
   if (e.target === this) this.style.display = 'none';
 });
 </script>
+
+<!-- ── CHECKOUT PAGE ── -->
+<div id="page-checkout" class="page">
+  <div style="max-width:1100px;margin:0 auto;padding:40px 24px">
+    <button onclick="openCart()" style="background:none;border:none;font-size:13px;color:#888;cursor:pointer;margin-bottom:24px">← Back to cart</button>
+    <div id="checkout-content"></div>
+  </div>
+</div>
+
+<!-- ── ORDER CONFIRMATION PAGE ── -->
+<div id="page-confirmation" class="page">
+  <div style="max-width:640px;margin:0 auto;padding:60px 24px">
+    <div id="confirmation-content"></div>
+  </div>
+</div>
+
+<!-- ── ORDER TRACKING PAGE ── -->
+<div id="page-track" class="page">
+  <div style="max-width:640px;margin:0 auto;padding:60px 24px">
+    <h1 style="font-family:'Fraunces',serif;font-size:32px;font-weight:300;margin-bottom:8px">Track Your Order</h1>
+    <p style="color:#888;font-size:14px;margin-bottom:32px">Enter your order reference number to check status.</p>
+    <div style="display:flex;gap:10px;margin-bottom:24px">
+      <input id="track-ref" placeholder="PP-XXXXX-XXXX" style="flex:1;padding:12px 16px;border:1px solid #E8E8E8;border-radius:6px;font-size:15px;font-family:'Inter',sans-serif">
+      <input id="track-email" placeholder="Email (optional)" style="flex:1;padding:12px 16px;border:1px solid #E8E8E8;border-radius:6px;font-size:14px;font-family:'Inter',sans-serif">
+      <button onclick="lookupOrder()" style="padding:12px 24px;background:#3B6FD4;color:#fff;border:none;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap">Track Order</button>
+    </div>
+    <div id="track-result"></div>
+  </div>
+</div>
+
+<!-- ── MY ACCOUNT PAGE ── -->
+<div id="page-account" class="page">
+  <div style="max-width:800px;margin:0 auto;padding:60px 24px">
+    <div id="account-content"></div>
+  </div>
+</div>
+
 </body>
 </html>
-
