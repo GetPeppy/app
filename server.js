@@ -532,12 +532,8 @@ const server = http.createServer(async (req, res) => {
       const data = await body(req);
       if (data.quantity !== undefined) {
         const qty = Number(data.quantity);
-        db.prepare(`UPDATE inventory SET quantity=? WHERE id=?`).run(qty, id);
-        // Auto set out of stock when quantity hits 0
-        if (qty === 0) db.prepare(`UPDATE inventory SET in_stock=0 WHERE id=?`).run(id);
+        db.prepare(`UPDATE inventory SET quantity=?, in_stock=? WHERE id=?`).run(qty, qty > 0 ? 1 : 0, id);
       }
-      if (data.in_stock !== undefined)
-        db.prepare(`UPDATE inventory SET in_stock=? WHERE id=?`).run(data.in_stock?1:0, id);
       if (data.price !== undefined)
         db.prepare(`UPDATE inventory SET price=? WHERE id=?`).run(data.price, id);
       return json(res, { ok:true });
@@ -555,6 +551,11 @@ const server = http.createServer(async (req, res) => {
       const stmt = db.prepare(`INSERT OR REPLACE INTO settings(key,value) VALUES(?,?)`);
       for (const [k,v] of Object.entries(data)) stmt.run(k, v);
       return json(res, { ok:true });
+    }
+
+    // Notify requests
+    if (pathname === '/api/admin/notify-requests' && method === 'GET') {
+      return json(res, db.prepare(`SELECT * FROM notify_requests ORDER BY created_at DESC`).all());
     }
 
     // Stats
@@ -785,54 +786,61 @@ loadStats(); loadOrders();
   if (pathname === '/admin/customers') {
     res.end(adminHTML('customers') + `
 <main>
-  <div class="card">
+  <div class="card" style="margin-bottom:24px">
     <div class="card-header"><h2>Customers</h2></div>
     <div id="customers-table"><div class="empty">Loading...</div></div>
   </div>
-</main>
-<!-- Customer modal -->
-<div class="modal-overlay" id="cust-modal">
-  <div class="modal">
-    <div class="modal-header">
-      <h2 id="cm-name">Customer</h2>
-      <button class="close-btn" onclick="closeModal('cust-modal')">✕</button>
-    </div>
-    <div class="modal-body" id="cm-body"></div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('cust-modal')">Close</button>
-      <button class="btn btn-primary" onclick="saveCustNotes()">Save Notes</button>
-    </div>
+  <div class="card">
+    <div class="card-header"><h2>Notify Me Requests</h2><span style="font-size:12px;color:#888">Customers who want to be notified when a product is back</span></div>
+    <div id="notify-table"><div class="empty">Loading...</div></div>
   </div>
-</div>
+</main>
 <script>
 let currentCustId = null;
 async function load() {
   const custs = await api('/api/admin/customers');
-  if (!custs.length) { document.getElementById('customers-table').innerHTML='<div class="empty">No customers yet</div>'; return; }
-  document.getElementById('customers-table').innerHTML = \`<table>
-    <thead><tr><th>Name</th><th>Email</th><th>Address</th><th>Orders</th><th>Spent</th><th>Joined</th><th></th></tr></thead>
-    <tbody>\${custs.map(c=>\`<tr>
-      <td style="font-weight:600">\${c.name||'—'}</td>
-      <td>\${c.email||'—'}</td>
-      <td style="font-size:12px;color:#555">\${c.address||'—'}</td>
-      <td>\${c.order_count||0}</td>
-      <td style="font-weight:600">CA$\${Number(c.total_spent||0).toFixed(0)}</td>
-      <td style="color:#888;font-size:12px">\${(c.created_at||'').slice(0,10)}</td>
-      <td><button class="btn btn-ghost btn-sm" onclick="openCust(\${c.id},\`\${c.name||''}\`)">View</button></td>
-    </tr>\`).join('')}
-    </tbody></table>\`;
+  if (!custs || !custs.length) {
+    document.getElementById('customers-table').innerHTML='<div class="empty">No customers yet</div>';
+  } else {
+    document.getElementById('customers-table').innerHTML = \`<table>
+      <thead><tr><th>Name</th><th>Email</th><th>Orders</th><th>Spent</th><th>Joined</th><th></th></tr></thead>
+      <tbody>\${custs.map(c=>\`<tr>
+        <td style="font-weight:600">\${c.name||'—'}</td>
+        <td>\${c.email||'—'}</td>
+        <td>\${c.order_count||0}</td>
+        <td style="font-weight:600">CA$\${Number(c.total_spent||0).toFixed(0)}</td>
+        <td style="color:#888;font-size:12px">\${(c.created_at||'').slice(0,10)}</td>
+        <td><button class="btn btn-ghost btn-sm" onclick="openCust(\${c.id})">View</button></td>
+      </tr>\`).join('')}
+      </tbody></table>\`;
+  }
+  // Load notify requests
+  const notifies = await api('/api/admin/notify-requests');
+  if (!notifies || !notifies.length) {
+    document.getElementById('notify-table').innerHTML='<div class="empty">No notify requests yet</div>';
+  } else {
+    const PROD = {'retatrutide-10mg':'Retatrutide 10mg','retatrutide-20mg':'Retatrutide 20mg','mots-c-10mg':'MOTS-c 10mg','mots-c-40mg':'MOTS-c 40mg','klow-80mg':'KLOW 80mg','glow-70mg':'GLOW 70mg','tesamorelin-10mg':'Tesamorelin 10mg','cjc-ipamorelin-10mg':'CJC-1295/Ipamorelin 10mg','nad-500mg':'NAD+ 500mg','nad-1000mg':'NAD+ 1000mg','5amino1mq-50mg':'5-Amino-1MQ 50mg','semax-10mg':'Semax 10mg','selank-10mg':'Selank 10mg'};
+    document.getElementById('notify-table').innerHTML = \`<table>
+      <thead><tr><th>Product</th><th>Email</th><th>Date</th></tr></thead>
+      <tbody>\${notifies.map(n=>\`<tr>
+        <td style="font-weight:600">\${PROD[n.product_id]||n.product_id}</td>
+        <td>\${n.email}</td>
+        <td style="color:#888;font-size:12px">\${(n.created_at||'').slice(0,10)}</td>
+      </tr>\`).join('')}
+      </tbody></table>\`;
+  }
 }
-async function openCust(id, name) {
+async function openCust(id) {
   currentCustId = id;
   const custs = await api('/api/admin/customers');
-  const c = custs.find(x=>x.id===id)||{};
+  const c = (custs||[]).find(x=>x.id===id)||{};
   document.getElementById('cm-name').textContent = c.name || 'Customer';
   document.getElementById('cm-body').innerHTML = \`
     <div class="grid-2" style="margin-bottom:16px">
       <div><label>Email</label><div>\${c.email||'—'}</div></div>
-      <div><label>Phone</label><div>\${c.phone||'—'}</div></div>
       <div><label>Address</label><div>\${c.address||'—'}</div></div>
       <div><label>Last Order</label><div>\${(c.last_order_at||'—').slice(0,10)}</div></div>
+      <div><label>Joined</label><div>\${(c.created_at||'—').slice(0,10)}</div></div>
     </div>
     <div class="grid-2" style="margin-bottom:16px">
       <div class="stat"><div class="stat-label">Orders</div><div class="stat-value">\${c.order_count||0}</div></div>
@@ -848,7 +856,19 @@ async function saveCustNotes() {
   toast('Saved'); closeModal('cust-modal'); load();
 }
 load();
-</script></body></html>`);
+</script>
+<!-- Customer modal -->
+<div class="modal-overlay" id="cust-modal">
+  <div class="modal">
+    <div class="modal-header"><h2 id="cm-name">Customer</h2><button class="close-btn" onclick="closeModal('cust-modal')">✕</button></div>
+    <div class="modal-body" id="cm-body"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('cust-modal')">Close</button>
+      <button class="btn btn-primary" onclick="saveCustNotes()">Save Notes</button>
+    </div>
+  </div>
+</div>
+</body></html>`);
     return;
   }
 
@@ -864,31 +884,26 @@ load();
 async function load() {
   const inv = await api('/api/admin/inventory');
   document.getElementById('inv-table').innerHTML = \`<table>
-    <thead><tr><th>Product</th><th>Dose</th><th>Price (CA$)</th><th>On-Hand Qty</th><th>In Stock</th></tr></thead>
+    <thead><tr><th>Product</th><th>Dose</th><th>Price (CA$)</th><th>On-Hand Qty</th><th>Status</th></tr></thead>
     <tbody>\${inv.map(p=>\`<tr>
       <td style="font-weight:600">\${p.name}</td>
       <td>\${p.dose||'—'}</td>
       <td><input type="number" value="\${p.price}" min="0" style="width:90px" onchange="save('\${p.id}',{price:+this.value})"></td>
-      <td><input type="number" value="\${p.quantity}" min="0" style="width:80px" onchange="saveQty('\${p.id}',this)"></td>
-      <td>
-        <label style="display:flex;align-items:center;gap:8px;margin:0;cursor:pointer">
-          <input type="checkbox" id="stock-\${p.id}" \${p.in_stock?'checked':''} onchange="save('\${p.id}',{in_stock:this.checked});this.nextSibling.textContent=this.checked?'In Stock':'Out of Stock'">
-          <span style="font-size:12px">\${p.in_stock?'In Stock':'Out of Stock'}</span>
-        </label>
-      </td>
+      <td><input type="number" value="\${p.quantity}" min="0" style="width:80px" onchange="saveQty('\${p.id}',+this.value,this)"></td>
+      <td id="status-\${p.id}">\${p.quantity>0
+        ? '<span class="badge badge-paid">In Stock</span>'
+        : '<span class="badge badge-cancelled">Out of Stock</span>'}</td>
     </tr>\`).join('')}
     </tbody></table>\`;
 }
-async function saveQty(id, input) {
-  const qty = +input.value;
+async function saveQty(id, qty, input) {
   const r = await api('/api/admin/inventory/'+encodeURIComponent(id),'PATCH',{quantity:qty});
   if (r.ok) {
     toast('Saved');
-    // If qty is 0, auto-uncheck the in_stock checkbox
-    if (qty === 0) {
-      const cb = document.getElementById('stock-'+id);
-      if (cb) { cb.checked = false; cb.nextSibling.textContent = 'Out of Stock'; }
-    }
+    const el = document.getElementById('status-'+id);
+    if (el) el.innerHTML = qty > 0
+      ? '<span class="badge badge-paid">In Stock</span>'
+      : '<span class="badge badge-cancelled">Out of Stock</span>';
   } else toast('Error',true);
 }
 async function save(id, data) {
