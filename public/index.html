@@ -1379,13 +1379,15 @@ function showOrderConfirmation(ref, payAddr, total, shipping, method) {
     + '</div>'
     + '<button id="conf-track-btn" class="confirm-track-btn">Track Order &rarr;</button>'
     + '</div>'
-    + '<button onclick="showPage('home')" style="display:inline-block;background:#3B6FD4;color:#fff;padding:14px 36px;font-size:15px;font-weight:700;border:none;border-radius:8px;cursor:pointer;margin-top:20px;font-family:'Inter',sans-serif">Return to Shop</button>'
+    + '<button onclick="showPage(\'home\')" style="display:inline-block;background:#3B6FD4;color:#fff;padding:14px 36px;font-size:15px;font-weight:700;border:none;border-radius:8px;cursor:pointer;margin-top:20px;font-family:'Inter',sans-serif">Return to Shop</button>'
     + '</div>';
   // Wire up buttons after render
   var copyBtn = document.getElementById('conf-copy-btn');
   if (copyBtn) copyBtn.onclick = function() { navigator.clipboard.writeText(ref).then(function(){ showToast('Copied!'); }); };
   var trackBtn = document.getElementById('conf-track-btn');
   if (trackBtn) trackBtn.onclick = function() { showPage('track'); document.getElementById('track-ref').value = ref; lookupOrder(); };
+  var homeBtn = document.getElementById('conf-home-btn');
+  if (homeBtn) homeBtn.onclick = function() { showPage('home'); };
 }
 async function lookupOrder() {
   var ref   = (document.getElementById('track-ref')||{}).value||'';
