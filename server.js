@@ -512,6 +512,20 @@ const server = http.createServer(async (req, res) => {
     return res.end(JSON.stringify({ ok:true, name: acct.name }));
   }
 
+  // ── Customer account: change password ───────────────────────────────────
+  if (pathname === '/api/account/change-password' && method === 'POST') {
+    const acct = getCustomerFromSession(req);
+    if (!acct) return json(res, { ok:false, error:'Not logged in' }, 401);
+    const data = await body(req);
+    if (!data.current_password || !data.new_password) return json(res, { ok:false, error:'Missing fields' }, 400);
+    if (data.new_password.length < 6) return json(res, { ok:false, error:'New password must be at least 6 characters' }, 400);
+    // Verify current password
+    const check = db.prepare(`SELECT id FROM customer_accounts WHERE id=? AND password_hash=?`).get(acct.id, hashPassword(data.current_password));
+    if (!check) return json(res, { ok:false, error:'Current password is incorrect' }, 400);
+    db.prepare(`UPDATE customer_accounts SET password_hash=? WHERE id=?`).run(hashPassword(data.new_password), acct.id);
+    return json(res, { ok:true });
+  }
+
   // ── Customer account: logout ─────────────────────────────────────────────
   if (pathname === '/api/account/logout' && method === 'POST') {
     const token = getCookie(req, 'peppy_customer');
@@ -685,6 +699,21 @@ const server = http.createServer(async (req, res) => {
       const id = pathname.split('/')[4];
       const data = await body(req);
       db.prepare(`UPDATE customers SET notes=? WHERE id=?`).run(data.notes, id);
+      return json(res, { ok:true });
+    }
+    // Admin: list customer accounts (for password reset)
+    if (pathname === '/api/admin/accounts' && method === 'GET') {
+      const accounts = db.prepare(`SELECT id, name, email, created_at FROM customer_accounts ORDER BY created_at DESC`).all();
+      return json(res, accounts);
+    }
+    // Admin: set temp password for a customer account
+    if (pathname.match(/^\/api\/admin\/accounts\/\d+\/password$/) && method === 'PATCH') {
+      const id = pathname.split('/')[4];
+      const data = await body(req);
+      if (!data.password) return json(res, { ok:false, error:'Password required' }, 400);
+      db.prepare(`UPDATE customer_accounts SET password_hash=? WHERE id=?`).run(hashPassword(data.password), id);
+      // Invalidate all their sessions so they must log in fresh
+      db.prepare(`DELETE FROM customer_sessions WHERE account_id=?`).run(id);
       return json(res, { ok:true });
     }
 
@@ -977,6 +1006,10 @@ loadStats(); loadOrders();
     <div class="card-header"><h2>Customers</h2></div>
     <div id="customers-table"><div class="empty">Loading...</div></div>
   </div>
+  <div class="card" style="margin-bottom:24px">
+    <div class="card-header"><h2>Customer Accounts</h2><span style="font-size:12px;color:#888">Accounts with login access — set temp passwords here</span></div>
+    <div id="accounts-table"><div class="empty">Loading...</div></div>
+  </div>
   <div class="card">
     <div class="card-header"><h2>Notify Me Requests</h2><span style="font-size:12px;color:#888">Customers who want to be notified when a product is back</span>
       <button class="btn btn-danger btn-sm" style="margin-left:auto" onclick="clearAllNotify()">Clear All</button>
@@ -984,8 +1017,26 @@ loadStats(); loadOrders();
     <div id="notify-table"><div class="empty">Loading...</div></div>
   </div>
 </main>
+<!-- Reset password modal -->
+<div class="modal-overlay" id="reset-modal">
+  <div class="modal">
+    <div class="modal-header"><h2>Set Temp Password</h2><button class="close-btn" onclick="closeModal('reset-modal')">✕</button></div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:#555;margin-bottom:16px">Set a temporary password for <strong id="reset-name"></strong>. Share it with the customer and ask them to change it after logging in.</p>
+      <div class="form-row"><label>Temporary Password</label><input id="reset-pw" type="text" placeholder="e.g. TempPass2026!"></div>
+      <div style="display:flex;gap:8px;margin-top:4px">
+        <button class="btn btn-ghost btn-sm" onclick="genTempPw()">Generate random</button>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('reset-modal')">Cancel</button>
+      <button class="btn btn-blue" onclick="saveReset()">Set Password</button>
+    </div>
+  </div>
+</div>
 <script>
 let currentCustId = null;
+let resetAccountId = null;
 async function load() {
   const custs = await api('/api/admin/customers');
   if (!custs || !custs.length) {
@@ -1003,7 +1054,41 @@ async function load() {
       </tr>\`).join('')}
       </tbody></table>\`;
   }
+  // Load customer accounts
+  const accounts = await api('/api/admin/accounts');
+  if (!accounts || !accounts.length) {
+    document.getElementById('accounts-table').innerHTML='<div class="empty">No customer accounts yet</div>';
+  } else {
+    document.getElementById('accounts-table').innerHTML = \`<table>
+      <thead><tr><th>Name</th><th>Email</th><th>Account Created</th><th></th></tr></thead>
+      <tbody>\${accounts.map(a=>\`<tr>
+        <td style="font-weight:600">\${a.name}</td>
+        <td>\${a.email}</td>
+        <td style="color:#888;font-size:12px">\${(a.created_at||'').slice(0,10)}</td>
+        <td><button class="btn btn-blue btn-sm" onclick="openReset(\${a.id},'\${a.name.replace(/'/g,'')}')">Reset Password</button></td>
+      </tr>\`).join('')}
+      </tbody></table>\`;
+  }
   await loadNotify();
+}
+function openReset(id, name) {
+  resetAccountId = id;
+  document.getElementById('reset-name').textContent = name;
+  document.getElementById('reset-pw').value = '';
+  openModal('reset-modal');
+}
+function genTempPw() {
+  const chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+  let pw = '';
+  for (let i = 0; i < 10; i++) pw += chars[Math.floor(Math.random()*chars.length)];
+  document.getElementById('reset-pw').value = pw;
+}
+async function saveReset() {
+  const pw = document.getElementById('reset-pw').value.trim();
+  if (!pw) { toast('Enter a password', true); return; }
+  const r = await api('/api/admin/accounts/'+resetAccountId+'/password','PATCH',{password:pw});
+  if (r.ok) { toast('Password updated — share "'+pw+'" with the customer'); closeModal('reset-modal'); }
+  else toast(r.error||'Error', true);
 }
 async function loadNotify() {
   const notifies = await api('/api/admin/notify-requests');
