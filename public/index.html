@@ -1366,6 +1366,7 @@ async function submitOrder() {
       _customerName = name.trim();
     }
     cart={}; updateCartBtn();
+    var t=document.getElementById('toast'); if(t){t.classList.remove('show');t.textContent='';}
     showOrderConfirmation(data.ref,data.payment_address,data.total,data.shipping,_payMethod);
   } catch(e) {
     alert('Error: '+e.message);
@@ -1374,6 +1375,10 @@ async function submitOrder() {
 }
 function showOrderConfirmation(ref, payAddr, total, shipping, method) {
   showPage('confirmation');
+  window.scrollTo(0,0);
+  // Hide the payment guide section and footer while on confirmation
+  document.querySelectorAll('section[style*="background:#F7F9FF"], section[style*="background: #F7F9FF"]').forEach(function(s){ s.style.display='none'; });
+  document.querySelector('footer') && (document.querySelector('footer').style.display='none');
   var el = document.getElementById('confirmation-content');
   if (!el) return;
   var mLabel = {usdc:'USDC (Ethereum)',btc:'Bitcoin',etransfer:'e-Transfer'}[method]||method;
