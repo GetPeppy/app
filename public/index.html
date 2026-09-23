@@ -1467,6 +1467,7 @@ async function renderAccountPage() {
     if (!me.ok) {
       // Only re-render the not-logged-in form if not already showing
       if (_accountPageState === 'logged-out') return;
+      _accountPageState = 'logged-out';
       el.innerHTML = '<h1 style="font-family:Fraunces,serif;font-size:32px;font-weight:300;margin-bottom:8px">My Account</h1>'
         + '<p style="font-size:14px;color:var(--muted);margin-bottom:36px">Sign in to track your orders, or create a new account.</p>'
         + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;max-width:680px">'
@@ -1493,6 +1494,7 @@ async function renderAccountPage() {
       return;
     }
     _customerName = me.name;
+    _accountPageState = 'logged-in';
     var orders = await fetch('/api/account/orders').then(function(r){return r.json();});
     var STATUS_COLOR={submitted:'#3B6FD4',received:'#D97706',payment_confirmed:'#16A34A',shipped:'#7C3AED',delivered:'#16A34A',cancelled:'#EF4444'};
     var STATUS_LABEL={submitted:'Submitted',received:'Received',payment_confirmed:'Payment Confirmed',shipped:'Shipped',delivered:'Delivered',cancelled:'Cancelled'};
@@ -1544,6 +1546,7 @@ async function renderAccountPage() {
       + '</div></div>';
       return;
     _customerName = me.name;
+    _accountPageState = 'logged-in';
     var orders = await fetch('/api/account/orders').then(function(r){return r.json();});
     var STATUS_LABEL={submitted:'Submitted',received:'Received',payment_confirmed:'Payment Confirmed',shipped:'Shipped',delivered:'Delivered',cancelled:'Cancelled'};
     var ordersHtml = orders.length===0 ? '<p style="color:#888;padding:24px">No orders yet.</p>'
@@ -1633,6 +1636,7 @@ async function accountRegister() {
 async function accountLogout() {
   await fetch('/api/account/logout',{method:'POST'});
   _customerName = null;
+  _accountPageState = null;
   renderAccountPage();
 }
 // Check login status on load
