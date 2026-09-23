@@ -461,8 +461,12 @@ const server = http.createServer(async (req, res) => {
     if (pathname.match(/^\/api\/admin\/inventory\/[^/]+$/) && method === 'PATCH') {
       const id = decodeURIComponent(pathname.split('/')[4]);
       const data = await body(req);
-      if (data.quantity !== undefined)
-        db.prepare(`UPDATE inventory SET quantity=? WHERE id=?`).run(data.quantity, id);
+      if (data.quantity !== undefined) {
+        const qty = Number(data.quantity);
+        db.prepare(`UPDATE inventory SET quantity=? WHERE id=?`).run(qty, id);
+        // Auto set out of stock when quantity hits 0
+        if (qty === 0) db.prepare(`UPDATE inventory SET in_stock=0 WHERE id=?`).run(id);
+      }
       if (data.in_stock !== undefined)
         db.prepare(`UPDATE inventory SET in_stock=? WHERE id=?`).run(data.in_stock?1:0, id);
       if (data.price !== undefined)
@@ -493,6 +497,10 @@ const server = http.createServer(async (req, res) => {
       return json(res, { total, pending, revenue, customers: custs });
     }
 
+    // COAs — list all
+    if (pathname === '/api/admin/coas' && method === 'GET') {
+      return json(res, db.prepare(`SELECT id,product_id,filename,label,lab,date,purity,is_current,uploaded_at FROM coa_files ORDER BY product_id, is_current DESC, uploaded_at DESC`).all());
+    }
     // COAs — list for a product
     if (pathname.match(/^\/api\/admin\/coas\/[^/]+$/) && method === 'GET') {
       const productId = pathname.split('/')[4];
@@ -792,15 +800,27 @@ async function load() {
       <td style="font-weight:600">\${p.name}</td>
       <td>\${p.dose||'—'}</td>
       <td><input type="number" value="\${p.price}" min="0" style="width:90px" onchange="save('\${p.id}',{price:+this.value})"></td>
-      <td><input type="number" value="\${p.quantity}" min="0" style="width:80px" onchange="save('\${p.id}',{quantity:+this.value})"></td>
+      <td><input type="number" value="\${p.quantity}" min="0" style="width:80px" onchange="saveQty('\${p.id}',this)"></td>
       <td>
         <label style="display:flex;align-items:center;gap:8px;margin:0;cursor:pointer">
-          <input type="checkbox" \${p.in_stock?'checked':''} onchange="save('\${p.id}',{in_stock:this.checked})">
+          <input type="checkbox" id="stock-\${p.id}" \${p.in_stock?'checked':''} onchange="save('\${p.id}',{in_stock:this.checked});this.nextSibling.textContent=this.checked?'In Stock':'Out of Stock'">
           <span style="font-size:12px">\${p.in_stock?'In Stock':'Out of Stock'}</span>
         </label>
       </td>
     </tr>\`).join('')}
     </tbody></table>\`;
+}
+async function saveQty(id, input) {
+  const qty = +input.value;
+  const r = await api('/api/admin/inventory/'+encodeURIComponent(id),'PATCH',{quantity:qty});
+  if (r.ok) {
+    toast('Saved');
+    // If qty is 0, auto-uncheck the in_stock checkbox
+    if (qty === 0) {
+      const cb = document.getElementById('stock-'+id);
+      if (cb) { cb.checked = false; cb.nextSibling.textContent = 'Out of Stock'; }
+    }
+  } else toast('Error',true);
 }
 async function save(id, data) {
   const r = await api('/api/admin/inventory/'+encodeURIComponent(id),'PATCH',data);
@@ -894,12 +914,10 @@ load();
 
   <div class="card" style="max-width:900px">
     <div class="card-header">
-      <h2>COAs by Product</h2>
-      <select id="prod-filter" onchange="loadCOAs()" style="width:auto;padding:6px 12px;font-size:13px">
-        ${PRODUCTS_LIST.map(p=>`<option value="${p.id}">${p.name}</option>`).join('')}
-      </select>
+      <h2>All Uploaded COAs</h2>
+      <button class="btn btn-ghost btn-sm" onclick="loadCOAs()">Refresh</button>
     </div>
-    <div id="coa-table"><div class="empty">Select a product above</div></div>
+    <div id="coa-table"><div class="empty">Loading...</div></div>
   </div>
 </main>
 <script>
@@ -920,24 +938,32 @@ async function uploadCOA() {
   else toast('Error: '+(data.error||'unknown'), true);
 }
 
+const PROD_NAMES = {
+  'retatrutide-10mg':'Retatrutide 10mg','retatrutide-20mg':'Retatrutide 20mg',
+  'mots-c-10mg':'MOTS-c 10mg','mots-c-40mg':'MOTS-c 40mg',
+  'klow-80mg':'KLOW 80mg','glow-70mg':'GLOW 70mg',
+  'tesamorelin-10mg':'Tesamorelin 10mg','cjc-ipamorelin-10mg':'CJC-1295 / Ipamorelin 10mg',
+  'nad-500mg':'NAD+ 500mg','nad-1000mg':'NAD+ 1000mg',
+  '5amino1mq-50mg':'5-Amino-1MQ 50mg','semax-10mg':'Semax 10mg','selank-10mg':'Selank 10mg'
+};
+
 async function loadCOAs() {
-  const pid = document.getElementById('prod-filter').value;
-  const coas = await api('/api/admin/coas/'+pid);
+  const coas = await api('/api/admin/coas');
   if (!coas.length) {
-    document.getElementById('coa-table').innerHTML = '<div class="empty">No COAs uploaded for this product yet</div>';
+    document.getElementById('coa-table').innerHTML = '<div class="empty">No COAs uploaded yet</div>';
     return;
   }
   document.getElementById('coa-table').innerHTML = \`<table>
-    <thead><tr><th>Label</th><th>Lab</th><th>Date</th><th>Purity</th><th>Status</th><th>Uploaded</th><th></th></tr></thead>
+    <thead><tr><th>Product</th><th>Label</th><th>Lab</th><th>Date</th><th>Purity</th><th>Status</th><th></th></tr></thead>
     <tbody>\${coas.map(c=>\`<tr>
-      <td style="font-weight:500">\${c.label}</td>
+      <td style="font-weight:600;white-space:nowrap">\${PROD_NAMES[c.product_id]||c.product_id}</td>
+      <td style="font-size:12px;color:#555">\${c.label}</td>
       <td>\${c.lab||'—'}</td>
-      <td>\${c.date||'—'}</td>
+      <td style="white-space:nowrap">\${c.date||'—'}</td>
       <td style="color:#16A34A;font-weight:600">\${c.purity||'—'}</td>
       <td>\${c.is_current ? '<span class="badge badge-paid">Current</span>' : '<span style="color:#888;font-size:12px">—</span>'}</td>
-      <td style="color:#888;font-size:12px">\${(c.uploaded_at||'').slice(0,10)}</td>
-      <td style="display:flex;gap:6px">
-        <a class="btn btn-ghost btn-sm" href="/coa/\${c.product_id}/\${c.filename}" target="_blank">View PDF</a>
+      <td style="display:flex;gap:6px;white-space:nowrap">
+        <a class="btn btn-ghost btn-sm" href="/coa/\${c.product_id}/\${c.filename}" target="_blank">View</a>
         \${!c.is_current ? \`<button class="btn btn-blue btn-sm" onclick="setCurrent(\${c.id})">Set Current</button>\` : ''}
         <button class="btn btn-danger btn-sm" onclick="deleteCOA(\${c.id})">Delete</button>
       </td>
