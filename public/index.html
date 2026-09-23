@@ -695,7 +695,7 @@ footer { background: #fff; border-top: 1px solid var(--border); padding: 40px 48
 
 
 <!-- How payment works -->
-<section class="payment-section" style="background:#F7F9FF;border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:64px 48px;">
+<section class="payment-section" id="payment-section" style="background:#F7F9FF;border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:64px 48px;">
   <div style="max-width:800px;margin:0 auto;">
     <p style="font-size:11px;font-weight:600;color:var(--accent);letter-spacing:.12em;text-transform:uppercase;margin-bottom:12px">Secure checkout</p>
     <h2 style="font-family:'Fraunces',serif;font-size:28px;font-weight:300;letter-spacing:-.5px;color:#111;margin-bottom:40px">How payment works</h2>
@@ -891,7 +891,7 @@ function showPage(name) {
   window.scrollTo(0, 0);
   // Payment section + footer only on home page
   var isHome = (name === 'home');
-  var paySection = document.querySelector('.payment-section');
+  var paySection = document.getElementById('payment-section');
   var footerEl = document.querySelector('footer');
   if (paySection) paySection.style.display = isHome ? '' : 'none';
   if (footerEl) footerEl.style.display = isHome ? '' : 'none';
@@ -1454,6 +1454,58 @@ async function lookupOrder() {
   } catch(e) { el.innerHTML='<p style="color:#EF4444">Error: '+e.message+'</p>'; }
 }
 async function renderAccountPage() {
+  var el = document.getElementById('account-content');
+  if (!el) return;
+  try {
+    var me = await fetch('/api/account/me').then(function(r){return r.json();});
+    if (!me.ok) {
+      el.innerHTML = '<h1 style="font-family:Fraunces,serif;font-size:32px;font-weight:300;margin-bottom:24px">My Account</h1>'
+        + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;max-width:600px">'
+        + '<div style="background:#fff;border:1px solid #E8E8E8;border-radius:10px;padding:28px">'
+        + '<h2 style="font-size:16px;font-weight:700;margin-bottom:20px">Sign In</h2>'
+        + '<div class="form-row"><label>Email</label><input id="acc-login-email" type="email"></div>'
+        + '<div class="form-row"><label>Password</label><input id="acc-login-pw" type="password"></div>'
+        + '<button onclick="accountLogin()" style="width:100%;padding:12px;background:#3B6FD4;color:#fff;border:none;border-radius:6px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Sign In</button>'
+        + '</div><div style="background:#fff;border:1px solid #E8E8E8;border-radius:10px;padding:28px">'
+        + '<h2 style="font-size:16px;font-weight:700;margin-bottom:20px">Create Account</h2>'
+        + '<div class="form-row"><label>Name</label><input id="acc-reg-name"></div>'
+        + '<div class="form-row"><label>Email</label><input id="acc-reg-email" type="email"></div>'
+        + '<div class="form-row"><label>Password</label><input id="acc-reg-pw" type="password"></div>'
+        + '<button onclick="accountRegister()" style="width:100%;padding:12px;background:#111;color:#fff;border:none;border-radius:6px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Create Account</button>'
+        + '</div></div>';
+      return;
+    }
+    _customerName = me.name;
+    var orders = await fetch('/api/account/orders').then(function(r){return r.json();});
+    var STATUS_LABEL={submitted:'Submitted',received:'Received',payment_confirmed:'Payment Confirmed',shipped:'Shipped',delivered:'Delivered',cancelled:'Cancelled'};
+    var ordersHtml = orders.length===0 ? '<p style="color:#888;padding:24px">No orders yet.</p>'
+      : '<table style="width:100%;border-collapse:collapse"><thead><tr style="background:#F9F9F9"><th style="padding:12px 16px;text-align:left;font-size:12px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:.05em">Ref</th><th style="padding:12px 16px;text-align:left;font-size:12px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:.05em">Date</th><th style="padding:12px 16px;font-size:12px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:.05em">Total</th><th style="padding:12px 16px;font-size:12px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:.05em">Status</th><th></th></tr></thead><tbody>'
+      + orders.map(function(o){ var tl=o.total||o.subtotal; return "<tr style=\"border-top:1px solid #F0F0F0\"><td style=\"padding:14px 16px\"><span style=\"font-family:monospace;font-size:13px\">"+o.order_ref+"</span></td><td style=\"padding:14px 16px;font-size:13px;color:#888\">"+o.created_at.slice(0,10)+"</td><td style=\"padding:14px 16px;font-size:14px;font-weight:600\">CA$"+tl+"</td><td style=\"padding:14px 16px\"><span class=\"badge badge-"+o.status+"\">"+( STATUS_LABEL[o.status]||o.status)+"</span></td><td style=\"padding:14px 16px\"><button class=\"acct-track-btn\" data-ref=\""+o.order_ref+"\" style=\"background:none;border:1px solid #3B6FD4;color:#3B6FD4;padding:5px 12px;border-radius:4px;font-size:12px;font-weight:600;cursor:pointer\">Track</button></td></tr>"; }).join("")
+      + '</tbody></table>';
+    el.innerHTML = '<h1 style="font-family:Fraunces,serif;font-size:32px;font-weight:300;margin-bottom:8px">My Account</h1>'
+      + '<p style="font-size:14px;color:var(--muted);margin-bottom:36px">Sign in to track your orders or create an account.</p>'
+      + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;max-width:680px">'
+      + '<div style="background:#fff;border:1px solid #E8E8E8;border-radius:10px;padding:32px">'
+      + '<p style="font-size:11px;font-weight:700;letter-spacing:.10em;text-transform:uppercase;color:var(--accent);margin-bottom:8px">Existing Customer</p>'
+      + '<h2 style="font-family:Fraunces,serif;font-size:22px;font-weight:300;margin-bottom:24px;color:#111">Sign In</h2>'
+      + '<div style="margin-bottom:14px"><label style="display:block;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#666;margin-bottom:6px">Email</label>'
+      + '<input id="acc-login-email" type="email" placeholder="you@example.com" style="width:100%;padding:11px 14px;border:1px solid #E0E0E0;border-radius:6px;font-size:14px;font-family:Inter,sans-serif;outline:none;box-sizing:border-box"></div>'
+      + '<div style="margin-bottom:22px"><label style="display:block;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#666;margin-bottom:6px">Password</label>'
+      + '<input id="acc-login-pw" type="password" placeholder="••••••••" style="width:100%;padding:11px 14px;border:1px solid #E0E0E0;border-radius:6px;font-size:14px;font-family:Inter,sans-serif;outline:none;box-sizing:border-box"></div>'
+      + '<button onclick="accountLogin()" style="width:100%;padding:13px;background:var(--accent);color:#fff;border:none;border-radius:7px;font-size:14px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif;transition:opacity .15s">Sign In</button>'
+      + '</div>'
+      + '<div style="background:#F7F9FF;border:1px solid #DDE6F5;border-radius:10px;padding:32px">'
+      + '<p style="font-size:11px;font-weight:700;letter-spacing:.10em;text-transform:uppercase;color:var(--accent);margin-bottom:8px">New Customer</p>'
+      + '<h2 style="font-family:Fraunces,serif;font-size:22px;font-weight:300;margin-bottom:24px;color:#111">Create Account</h2>'
+      + '<div style="margin-bottom:14px"><label style="display:block;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#666;margin-bottom:6px">Full Name</label>'
+      + '<input id="acc-reg-name" placeholder="John Smith" style="width:100%;padding:11px 14px;border:1px solid #E0E0E0;border-radius:6px;font-size:14px;font-family:Inter,sans-serif;outline:none;box-sizing:border-box"></div>'
+      + '<div style="margin-bottom:14px"><label style="display:block;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#666;margin-bottom:6px">Email</label>'
+      + '<input id="acc-reg-email" type="email" placeholder="you@example.com" style="width:100%;padding:11px 14px;border:1px solid #E0E0E0;border-radius:6px;font-size:14px;font-family:Inter,sans-serif;outline:none;box-sizing:border-box"></div>'
+      + '<div style="margin-bottom:22px"><label style="display:block;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#666;margin-bottom:6px">Password</label>'
+      + '<input id="acc-reg-pw" type="password" placeholder="Min 8 characters" style="width:100%;padding:11px 14px;border:1px solid #E0E0E0;border-radius:6px;font-size:14px;font-family:Inter,sans-serif;outline:none;box-sizing:border-box"></div>'
+      + '<button onclick="accountRegister()" style="width:100%;padding:13px;background:#111;color:#fff;border:none;border-radius:7px;font-size:14px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">Create Account</button>'
+      + '</div></div>';
+      return;ion renderAccountPage() {
   var el = document.getElementById('account-content');
   if (!el) return;
   try {
