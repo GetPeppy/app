@@ -1458,6 +1458,8 @@ async function renderAccountPage() {
       + '<div style="background:#fff;border:1px solid #E8E8E8;border-radius:10px;overflow:hidden">'
       + '<div style="padding:16px 20px;border-bottom:1px solid #E8E8E8"><h2 style="font-size:15px;font-weight:700">My Orders</h2></div>'
       + ordersHtml + '</div>';
+  // Wire track buttons
+  document.querySelectorAll('.acct-track-btn').forEach(function(b){ b.onclick = function(){ showPage('track'); document.getElementById('track-ref').value=this.dataset.ref; lookupOrder(); }; });
   } catch(e) { el.innerHTML='<p style="color:#EF4444">Error loading account: '+e.message+'</p>'; }
 }
 async function accountLogin() {
