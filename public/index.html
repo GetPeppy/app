@@ -904,7 +904,7 @@ function showPage(name) {
   if (name === 'home') { refreshFeatured(); }
   if (name === 'lab') renderLabReports();
   if (name === 'checkout') renderCheckout();
-  if (name === 'account') renderAccountPage();
+  if (name === 'account' && !document.getElementById('acc-login-email')) renderAccountPage();
   if (name === 'product') {}
 }
 
@@ -1580,8 +1580,10 @@ async function changePassword() {
 }
 
 async function accountLogin() {
-  var email = (document.getElementById('acc-login-email')||{}).value||'';
-  var pw    = (document.getElementById('acc-login-pw')||{}).value||'';
+  var emailEl = document.getElementById('acc-login-email');
+  var pwEl    = document.getElementById('acc-login-pw');
+  var email   = emailEl ? emailEl.value.trim() : '';
+  var pw      = pwEl    ? pwEl.value          : '';
   var errEl = document.getElementById('login-error');
   if (!email||!pw) {
     if (errEl) { errEl.textContent='Please enter your email and password.'; errEl.style.display='block'; }
