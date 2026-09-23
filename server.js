@@ -434,6 +434,21 @@ const server = http.createServer(async (req, res) => {
     const shipping = calcShipping(subtotal);
     const total = subtotal + shipping;
 
+    // ── Validate inventory before placing order ───────────────────────────────
+    if (data.items && data.items.length) {
+      for (const item of data.items) {
+        const inv = db.prepare(`SELECT quantity, in_stock, name, dose FROM inventory WHERE id=?`).get(item.id);
+        if (!inv) continue;
+        if (!inv.in_stock || inv.quantity <= 0) {
+          return json(res, { ok:false, error:`${inv.name} ${inv.dose} is currently out of stock.` }, 400);
+        }
+        const qty = item.qty || 1;
+        if (qty > inv.quantity) {
+          return json(res, { ok:false, error:`Only ${inv.quantity} unit${inv.quantity!==1?'s':''} of ${inv.name} ${inv.dose} available. You requested ${qty}.` }, 400);
+        }
+      }
+    }
+
     // Handle account creation if password provided
     let accountId = null;
     if (data.password && data.email) {
@@ -707,6 +722,20 @@ const server = http.createServer(async (req, res) => {
     if (pathname === '/api/admin/notify-requests' && method === 'GET') {
       return json(res, db.prepare(`SELECT * FROM notify_requests ORDER BY created_at DESC`).all());
     }
+    if (pathname.match(/^\/api\/admin\/notify-requests\/\d+$/) && method === 'DELETE') {
+      const id = pathname.split('/')[4];
+      db.prepare(`DELETE FROM notify_requests WHERE id=?`).run(id);
+      return json(res, { ok:true });
+    }
+    if (pathname === '/api/admin/notify-requests/clear' && method === 'DELETE') {
+      const data = await body(req);
+      if (data.product_id) {
+        db.prepare(`DELETE FROM notify_requests WHERE product_id=?`).run(data.product_id);
+      } else {
+        db.prepare(`DELETE FROM notify_requests`).run();
+      }
+      return json(res, { ok:true });
+    }
 
     // Stats
     if (pathname === '/api/admin/stats' && method === 'GET') {
@@ -949,7 +978,9 @@ loadStats(); loadOrders();
     <div id="customers-table"><div class="empty">Loading...</div></div>
   </div>
   <div class="card">
-    <div class="card-header"><h2>Notify Me Requests</h2><span style="font-size:12px;color:#888">Customers who want to be notified when a product is back</span></div>
+    <div class="card-header"><h2>Notify Me Requests</h2><span style="font-size:12px;color:#888">Customers who want to be notified when a product is back</span>
+      <button class="btn btn-danger btn-sm" style="margin-left:auto" onclick="clearAllNotify()">Clear All</button>
+    </div>
     <div id="notify-table"><div class="empty">Loading...</div></div>
   </div>
 </main>
@@ -972,21 +1003,33 @@ async function load() {
       </tr>\`).join('')}
       </tbody></table>\`;
   }
-  // Load notify requests
+  await loadNotify();
+}
+async function loadNotify() {
   const notifies = await api('/api/admin/notify-requests');
   if (!notifies || !notifies.length) {
     document.getElementById('notify-table').innerHTML='<div class="empty">No notify requests yet</div>';
-  } else {
-    const PROD = {'retatrutide-10mg':'Retatrutide 10mg','retatrutide-20mg':'Retatrutide 20mg','mots-c-10mg':'MOTS-c 10mg','mots-c-40mg':'MOTS-c 40mg','klow-80mg':'KLOW 80mg','glow-70mg':'GLOW 70mg','tesamorelin-10mg':'Tesamorelin 10mg','cjc-ipamorelin-10mg':'CJC-1295/Ipamorelin 10mg','nad-500mg':'NAD+ 500mg','nad-1000mg':'NAD+ 1000mg','5amino1mq-50mg':'5-Amino-1MQ 50mg','semax-10mg':'Semax 10mg','selank-10mg':'Selank 10mg'};
-    document.getElementById('notify-table').innerHTML = \`<table>
-      <thead><tr><th>Product</th><th>Email</th><th>Date</th></tr></thead>
-      <tbody>\${notifies.map(n=>\`<tr>
-        <td style="font-weight:600">\${PROD[n.product_id]||n.product_id}</td>
-        <td>\${n.email}</td>
-        <td style="color:#888;font-size:12px">\${(n.created_at||'').slice(0,10)}</td>
-      </tr>\`).join('')}
-      </tbody></table>\`;
+    return;
   }
+  const PROD = {'retatrutide-10mg':'Retatrutide 10mg','retatrutide-20mg':'Retatrutide 20mg','mots-c-10mg':'MOTS-c 10mg','mots-c-40mg':'MOTS-c 40mg','klow-80mg':'KLOW 80mg','glow-70mg':'GLOW 70mg','tesamorelin-10mg':'Tesamorelin 10mg','cjc-ipamorelin-10mg':'CJC-1295/Ipamorelin 10mg','nad-500mg':'NAD+ 500mg','nad-1000mg':'NAD+ 1000mg','5amino1mq-50mg':'5-Amino-1MQ 50mg','semax-10mg':'Semax 10mg','selank-10mg':'Selank 10mg'};
+  document.getElementById('notify-table').innerHTML = \`<table>
+    <thead><tr><th>Product</th><th>Email</th><th>Date</th><th></th></tr></thead>
+    <tbody>\${notifies.map(n=>\`<tr>
+      <td style="font-weight:600">\${PROD[n.product_id]||n.product_id}</td>
+      <td>\${n.email}</td>
+      <td style="color:#888;font-size:12px">\${(n.created_at||'').slice(0,10)}</td>
+      <td><button class="btn btn-danger btn-sm" onclick="deleteNotify(\${n.id})">Dismiss</button></td>
+    </tr>\`).join('')}
+    </tbody></table>\`;
+}
+async function deleteNotify(id) {
+  const r = await api('/api/admin/notify-requests/'+id,'DELETE');
+  if (r.ok) { toast('Dismissed'); await loadNotify(); } else toast('Error',true);
+}
+async function clearAllNotify() {
+  if (!confirm('Clear all notify requests?')) return;
+  const r = await api('/api/admin/notify-requests/clear','DELETE');
+  if (r.ok) { toast('All cleared'); await loadNotify(); } else toast('Error',true);
 }
 async function openCust(id) {
   currentCustId = id;

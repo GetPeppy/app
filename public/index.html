@@ -1317,6 +1317,7 @@ function renderCheckout() {
       : '<div class="co-account-box"><p>Create an account to track your orders (optional)</p>'
       + '<div><label class="co-label">Password (leave blank to checkout as guest)</label>'
       + '<input class="co-field" id="co-password" type="password" placeholder="Min 8 characters"></div></div>')
+    + '<div id="co-error" style="display:none;background:#FEE2E2;color:#991B1B;border:1px solid #FECACA;padding:12px 16px;border-radius:6px;margin-top:16px;font-size:13px"></div>'
     + '<button class="co-submit-btn" onclick="submitOrder()">Place Order &rarr;</button>'
     + '<p class="co-legal">For research use only. Not for human consumption. Must be 21+ to purchase.</p>'
     + '</div>'
@@ -1369,7 +1370,8 @@ async function submitOrder() {
     var t=document.getElementById('toast'); if(t){t.classList.remove('show');t.textContent='';}
     showOrderConfirmation(data.ref,data.payment_address,data.total,data.shipping,_payMethod);
   } catch(e) {
-    alert('Error: '+e.message);
+    var errEl = document.getElementById('co-error');
+    if (errEl) { errEl.textContent=e.message; errEl.style.display='block'; } else { alert('Error: '+e.message); }
     if (btn) { btn.textContent='Place Order'; btn.disabled=false; }
   }
 }
