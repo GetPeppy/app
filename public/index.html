@@ -469,7 +469,7 @@ footer { background: #fff; border-top: 1px solid var(--border); padding: 40px 48
           <p class="featured-card-dose">10mg</p>
           <div class="featured-card-footer">
             <span class="featured-card-price">CA$90</span>
-            <button class="featured-card-btn" onclick="event.stopPropagation();quickAdd(0)">Add to Cart</button>
+            <button class="featured-card-btn" id="fc-btn-0" onclick="event.stopPropagation();quickAdd(0)">Add to Cart</button>
           </div>
         </div>
       </div>
@@ -482,7 +482,7 @@ footer { background: #fff; border-top: 1px solid var(--border); padding: 40px 48
           <p class="featured-card-dose">10mg</p>
           <div class="featured-card-footer">
             <span class="featured-card-price">CA$50</span>
-            <button class="featured-card-btn" onclick="event.stopPropagation();quickAdd(11)">Add to Cart</button>
+            <button class="featured-card-btn" id="fc-btn-11" onclick="event.stopPropagation();quickAdd(11)">Add to Cart</button>
           </div>
         </div>
       </div>
@@ -495,7 +495,7 @@ footer { background: #fff; border-top: 1px solid var(--border); padding: 40px 48
           <p class="featured-card-dose">10mg</p>
           <div class="featured-card-footer">
             <span class="featured-card-price">CA$50</span>
-            <button class="featured-card-btn" onclick="event.stopPropagation();quickAdd(12)">Add to Cart</button>
+            <button class="featured-card-btn" id="fc-btn-12" onclick="event.stopPropagation();quickAdd(12)">Add to Cart</button>
           </div>
         </div>
       </div>
@@ -508,7 +508,7 @@ footer { background: #fff; border-top: 1px solid var(--border); padding: 40px 48
           <p class="featured-card-dose">1000mg</p>
           <div class="featured-card-footer">
             <span class="featured-card-price">CA$80</span>
-            <button class="featured-card-btn" onclick="event.stopPropagation();quickAdd(9)">Add to Cart</button>
+            <button class="featured-card-btn" id="fc-btn-9" onclick="event.stopPropagation();quickAdd(9)">Add to Cart</button>
           </div>
         </div>
       </div>
@@ -831,27 +831,26 @@ function showPage(name) {
 
 function refreshFeatured() {
   fetch('/api/stock').then(function(r){ return r.json(); }).then(function(stock) {
-    PRODUCTS.forEach(function(p){ if(stock[p.id] !== undefined) p.inStock = stock[p.id].in_stock; });
-    var cards = document.querySelectorAll('.featured-card[data-idx]');
-    cards.forEach(function(card) {
-      var idx = parseInt(card.getAttribute('data-idx'));
+    [0, 9, 11, 12].forEach(function(idx) {
       var p = PRODUCTS[idx];
       if (!p) return;
-      var footer = card.querySelector('.featured-card-footer');
-      if (!footer) return;
-      var btn = footer.querySelector('button');
+      var btn = document.getElementById('fc-btn-' + idx);
       if (!btn) return;
-      if (p.inStock) {
+      var inStock = stock[p.id] ? stock[p.id].in_stock : p.inStock;
+      if (inStock) {
         btn.className = 'featured-card-btn';
         btn.textContent = 'Add to Cart';
         btn.onclick = function(e) { e.stopPropagation(); quickAdd(idx); };
         btn.disabled = false;
       } else {
         btn.className = 'notify-btn';
+        btn.style.width = '100%';
         btn.textContent = 'Notify Me';
         btn.onclick = function(e) { e.stopPropagation(); openNotify(p.id, p.name + ' ' + p.dose); };
-        btn.style.width = '100%';
       }
+    });
+  }).catch(function(){});
+}
     });
   }).catch(function(){});
 }
@@ -1153,6 +1152,8 @@ function showProduct(idx) {
 
 document.addEventListener('keydown', function(e){ if (e.key === 'Escape') { closeModal(); closeCart(); } });
 renderGrid();
+// Run on initial load
+refreshFeatured();
 </script>
 
 <!-- Notify Me Modal -->
