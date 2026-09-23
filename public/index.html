@@ -1513,23 +1513,7 @@ async function renderAccountPage() {
       + '<div style="margin-bottom:22px"><label style="display:block;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#666;margin-bottom:6px">Password</label>'
       + '<input id="acc-reg-pw" type="password" placeholder="Min 8 characters" style="width:100%;padding:11px 14px;border:1px solid #E0E0E0;border-radius:6px;font-size:14px;font-family:Inter,sans-serif;outline:none;box-sizing:border-box"></div>'
       + '<button onclick="accountRegister()" style="width:100%;padding:13px;background:#111;color:#fff;border:none;border-radius:7px;font-size:14px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">Create Account</button>'
-      + '</div></div>';);
-    if (!me.ok) {
-      el.innerHTML = '<h1 style="font-family:Fraunces,serif;font-size:32px;font-weight:300;margin-bottom:24px">My Account</h1>'
-        + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;max-width:600px">'
-        + '<div style="background:#fff;border:1px solid #E8E8E8;border-radius:10px;padding:28px">'
-        + '<h2 style="font-size:16px;font-weight:700;margin-bottom:20px">Sign In</h2>'
-        + '<div class="form-row"><label>Email</label><input id="acc-login-email" type="email"></div>'
-        + '<div class="form-row"><label>Password</label><input id="acc-login-pw" type="password"></div>'
-        + '<button onclick="accountLogin()" style="width:100%;padding:12px;background:#3B6FD4;color:#fff;border:none;border-radius:6px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Sign In</button>'
-        + '</div><div style="background:#fff;border:1px solid #E8E8E8;border-radius:10px;padding:28px">'
-        + '<h2 style="font-size:16px;font-weight:700;margin-bottom:20px">Create Account</h2>'
-        + '<div class="form-row"><label>Name</label><input id="acc-reg-name"></div>'
-        + '<div class="form-row"><label>Email</label><input id="acc-reg-email" type="email"></div>'
-        + '<div class="form-row"><label>Password</label><input id="acc-reg-pw" type="password"></div>'
-        + '<button onclick="accountRegister()" style="width:100%;padding:12px;background:#111;color:#fff;border:none;border-radius:6px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Create Account</button>'
-        + '</div></div>';
-      return;
+      + '</div></div>';
     }
     _customerName = me.name;
     var orders = await fetch('/api/account/orders').then(function(r){return r.json();});
