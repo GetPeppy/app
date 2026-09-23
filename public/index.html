@@ -1469,7 +1469,7 @@ async function renderAccountPage() {
         + '<input id="acc-login-email" type="email" placeholder="you@example.com" style="width:100%;padding:11px 14px;border:1px solid #E0E0E0;border-radius:6px;font-size:14px;font-family:Inter,sans-serif;outline:none;box-sizing:border-box"></div>'
         + '<div style="margin-bottom:22px"><label style="display:block;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#666;margin-bottom:6px">Password</label>'
         + '<input id="acc-login-pw" type="password" placeholder="Your password" style="width:100%;padding:11px 14px;border:1px solid #E0E0E0;border-radius:6px;font-size:14px;font-family:Inter,sans-serif;outline:none;box-sizing:border-box"></div>'
-        + '<button onclick="accountLogin()" style="width:100%;padding:13px;background:var(--accent);color:#fff;border:none;border-radius:7px;font-size:14px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">Sign In</button>'
+        + '<div id="login-error" style="display:none;color:#EF4444;font-size:13px;margin-bottom:12px;padding:10px;background:#FEF2F2;border-radius:6px"></div>' + '<button onclick="accountLogin()" style="width:100%;padding:13px;background:var(--accent);color:#fff;border:none;border-radius:7px;font-size:14px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">Sign In</button>'
         + '</div>'
         + '<div style="background:#F7F9FF;border:1px solid #DDE6F5;border-radius:10px;padding:32px">'
         + '<p style="font-size:11px;font-weight:700;letter-spacing:.10em;text-transform:uppercase;color:var(--accent);margin-bottom:8px">New Customer</p>'
@@ -1480,7 +1480,7 @@ async function renderAccountPage() {
         + '<input id="acc-reg-email" type="email" placeholder="you@example.com" style="width:100%;padding:11px 14px;border:1px solid #E0E0E0;border-radius:6px;font-size:14px;font-family:Inter,sans-serif;outline:none;box-sizing:border-box"></div>'
         + '<div style="margin-bottom:22px"><label style="display:block;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#666;margin-bottom:6px">Password</label>'
         + '<input id="acc-reg-pw" type="password" placeholder="Min 8 characters" style="width:100%;padding:11px 14px;border:1px solid #E0E0E0;border-radius:6px;font-size:14px;font-family:Inter,sans-serif;outline:none;box-sizing:border-box"></div>'
-        + '<button onclick="accountRegister()" style="width:100%;padding:13px;background:#111;color:#fff;border:none;border-radius:7px;font-size:14px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">Create Account</button>'
+        + '<div id="reg-error" style="display:none;color:#EF4444;font-size:13px;margin-bottom:12px;padding:10px;background:#FEF2F2;border-radius:6px"></div>' + '<button onclick="accountRegister()" style="width:100%;padding:13px;background:#111;color:#fff;border:none;border-radius:7px;font-size:14px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">Create Account</button>'
         + '</div></div>';
       return;
     }
@@ -1512,7 +1512,7 @@ async function renderAccountPage() {
       + '<input id="acc-reg-email" type="email" placeholder="you@example.com" style="width:100%;padding:11px 14px;border:1px solid #E0E0E0;border-radius:6px;font-size:14px;font-family:Inter,sans-serif;outline:none;box-sizing:border-box"></div>'
       + '<div style="margin-bottom:22px"><label style="display:block;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#666;margin-bottom:6px">Password</label>'
       + '<input id="acc-reg-pw" type="password" placeholder="Min 8 characters" style="width:100%;padding:11px 14px;border:1px solid #E0E0E0;border-radius:6px;font-size:14px;font-family:Inter,sans-serif;outline:none;box-sizing:border-box"></div>'
-      + '<button onclick="accountRegister()" style="width:100%;padding:13px;background:#111;color:#fff;border:none;border-radius:7px;font-size:14px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">Create Account</button>'
+      + '<div id="reg-error" style="display:none;color:#EF4444;font-size:13px;margin-bottom:12px;padding:10px;background:#FEF2F2;border-radius:6px"></div>' + '<button onclick="accountRegister()" style="width:100%;padding:13px;background:#111;color:#fff;border:none;border-radius:7px;font-size:14px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">Create Account</button>'
       + '</div></div>';
       return;
     _customerName = me.name;
@@ -1562,11 +1562,20 @@ async function changePassword() {
 async function accountLogin() {
   var email = (document.getElementById('acc-login-email')||{}).value||'';
   var pw    = (document.getElementById('acc-login-pw')||{}).value||'';
-  var r = await fetch('/api/account/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password:pw})});
-  var d = await r.json();
-  if (!d.ok) { alert(d.error||'Login failed'); return; }
-  _customerName = d.name;
-  renderAccountPage();
+  if (!email||!pw) { showLoginError('Please enter your email and password.'); return; }
+  var btn = document.querySelector('button[onclick="accountLogin()"]');
+  if (btn) { btn.textContent='Signing in...'; btn.disabled=true; }
+  try {
+    var r = await fetch('/api/account/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:email,password:pw})});
+    var d = await r.json();
+    if (!d.ok) { showLoginError(d.error||'Invalid email or password.'); if(btn){btn.textContent='Sign In';btn.disabled=false;} return; }
+    _customerName = d.name;
+    renderAccountPage();
+  } catch(err) { showLoginError('Connection error. Please try again.'); if(btn){btn.textContent='Sign In';btn.disabled=false;} }
+}
+function showLoginError(msg) {
+  var el = document.getElementById('login-error');
+  if (el) { el.textContent=msg; el.style.display='block'; }
 }
 async function accountRegister() {
   var name  = (document.getElementById('acc-reg-name')||{}).value||'';
@@ -1574,7 +1583,7 @@ async function accountRegister() {
   var pw    = (document.getElementById('acc-reg-pw')||{}).value||'';
   var r = await fetch('/api/account/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,email,password:pw})});
   var d = await r.json();
-  if (!d.ok) { alert(d.error||'Registration failed'); return; }
+  if (!d.ok) { var e2=document.getElementById('reg-error'); if(e2){e2.textContent=d.error||'Registration failed';e2.style.display='block';} return; }
   _customerName = name;
   renderAccountPage();
 }

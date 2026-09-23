@@ -706,6 +706,14 @@ const server = http.createServer(async (req, res) => {
       const accounts = db.prepare(`SELECT id, name, email, created_at FROM customer_accounts ORDER BY created_at DESC`).all();
       return json(res, accounts);
     }
+    // Admin: update customer account details
+    if (pathname.match(/^\/api\/admin\/accounts\/\d+$/) && method === 'PATCH') {
+      const id = pathname.split('/')[4];
+      const data = await body(req);
+      db.prepare(`UPDATE customer_accounts SET name=COALESCE(?,name), email=COALESCE(?,email), phone=COALESCE(?,phone) WHERE id=?`)
+        .run(data.name||null, data.email||null, data.phone||null, id);
+      return json(res, { ok:true });
+    }
     // Admin: set temp password for a customer account
     if (pathname.match(/^\/api\/admin\/accounts\/\d+\/password$/) && method === 'PATCH') {
       const id = pathname.split('/')[4];
@@ -1003,29 +1011,43 @@ loadStats(); loadOrders();
     res.end(adminHTML('customers') + `
 <main>
   <div class="card" style="margin-bottom:24px">
-    <div class="card-header"><h2>Customers</h2></div>
+    <div class="card-header"><h2>All Customers</h2><span style="font-size:12px;color:#888">Guest orders and registered accounts</span></div>
     <div id="customers-table"><div class="empty">Loading...</div></div>
   </div>
-  <div class="card" style="margin-bottom:24px">
-    <div class="card-header"><h2>Customer Accounts</h2><span style="font-size:12px;color:#888">Accounts with login access — set temp passwords here</span></div>
-    <div id="accounts-table"><div class="empty">Loading...</div></div>
-  </div>
   <div class="card">
-    <div class="card-header"><h2>Notify Me Requests</h2><span style="font-size:12px;color:#888">Customers who want to be notified when a product is back</span>
+    <div class="card-header"><h2>Notify Me Requests</h2><span style="font-size:12px;color:#888">Waiting to hear about restocks</span>
       <button class="btn btn-danger btn-sm" style="margin-left:auto" onclick="clearAllNotify()">Clear All</button>
     </div>
     <div id="notify-table"><div class="empty">Loading...</div></div>
   </div>
 </main>
+
+<!-- Customer detail/edit modal -->
+<div class="modal-overlay" id="cust-modal">
+  <div class="modal" style="width:620px">
+    <div class="modal-header">
+      <h2 id="cm-name">Customer</h2>
+      <button class="close-btn" onclick="closeModal('cust-modal')">✕</button>
+    </div>
+    <div class="modal-body" id="cm-body"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('cust-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveCust()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
 <!-- Reset password modal -->
 <div class="modal-overlay" id="reset-modal">
   <div class="modal">
-    <div class="modal-header"><h2>Set Temp Password</h2><button class="close-btn" onclick="closeModal('reset-modal')">✕</button></div>
+    <div class="modal-header"><h2>Set Temporary Password</h2><button class="close-btn" onclick="closeModal('reset-modal')">✕</button></div>
     <div class="modal-body">
-      <p style="font-size:13px;color:#555;margin-bottom:16px">Set a temporary password for <strong id="reset-name"></strong>. Share it with the customer and ask them to change it after logging in.</p>
-      <div class="form-row"><label>Temporary Password</label><input id="reset-pw" type="text" placeholder="e.g. TempPass2026!"></div>
-      <div style="display:flex;gap:8px;margin-top:4px">
-        <button class="btn btn-ghost btn-sm" onclick="genTempPw()">Generate random</button>
+      <p style="font-size:13px;color:#555;margin-bottom:16px">Set a temporary password for <strong id="reset-name"></strong> and share it with them. Ask them to change it after signing in.</p>
+      <div class="form-row"><label>Temporary Password</label>
+        <div style="display:flex;gap:8px">
+          <input id="reset-pw" type="text" placeholder="e.g. TempPass2026!" style="flex:1">
+          <button class="btn btn-ghost btn-sm" onclick="genTempPw()">Generate</button>
+        </div>
       </div>
     </div>
     <div class="modal-footer">
@@ -1034,42 +1056,103 @@ loadStats(); loadOrders();
     </div>
   </div>
 </div>
+
 <script>
 let currentCustId = null;
+let currentAcctId = null;
 let resetAccountId = null;
+
 async function load() {
-  const custs = await api('/api/admin/customers');
-  if (!custs || !custs.length) {
+  // Merge guest orders (customers table) + registered accounts
+  const [custs, accounts] = await Promise.all([
+    api('/api/admin/customers'),
+    api('/api/admin/accounts')
+  ]);
+
+  // Build a unified list: accounts first (have login), then guest-only customers
+  const acctEmails = new Set((accounts||[]).map(a=>a.email));
+  const guestCusts = (custs||[]).filter(c => !acctEmails.has(c.email));
+
+  const rows = [
+    ...(accounts||[]).map(a => {
+      const cust = (custs||[]).find(c=>c.email===a.email)||{};
+      return { type:'account', acct_id:a.id, cust_id:cust.id, name:a.name, email:a.email,
+               phone:a.phone||cust.phone||'', address:cust.address||'',
+               order_count:cust.order_count||0, total_spent:cust.total_spent||0,
+               created_at:a.created_at, notes:cust.notes||'' };
+    }),
+    ...guestCusts.map(c => ({ type:'guest', cust_id:c.id, name:c.name, email:c.email,
+               phone:c.phone||'', address:c.address||'',
+               order_count:c.order_count||0, total_spent:c.total_spent||0,
+               created_at:c.created_at, notes:c.notes||'' }))
+  ];
+
+  if (!rows.length) {
     document.getElementById('customers-table').innerHTML='<div class="empty">No customers yet</div>';
   } else {
     document.getElementById('customers-table').innerHTML = \`<table>
-      <thead><tr><th>Name</th><th>Email</th><th>Orders</th><th>Spent</th><th>Joined</th><th></th></tr></thead>
-      <tbody>\${custs.map(c=>\`<tr>
-        <td style="font-weight:600">\${c.name||'—'}</td>
-        <td>\${c.email||'—'}</td>
-        <td>\${c.order_count||0}</td>
-        <td style="font-weight:600">CA$\${Number(c.total_spent||0).toFixed(0)}</td>
-        <td style="color:#888;font-size:12px">\${(c.created_at||'').slice(0,10)}</td>
-        <td><button class="btn btn-ghost btn-sm" onclick="openCust(\${c.id})">View</button></td>
+      <thead><tr><th>Name</th><th>Email</th><th>Type</th><th>Orders</th><th>Spent</th><th>Since</th><th></th></tr></thead>
+      <tbody>\${rows.map((r,i)=>\`<tr data-i="\${i}">
+        <td style="font-weight:600">\${r.name||'—'}</td>
+        <td>\${r.email||'—'}</td>
+        <td>\${r.type==='account'?'<span class="badge badge-paid">Account</span>':'<span class="tag">Guest</span>'}</td>
+        <td>\${r.order_count}</td>
+        <td style="font-weight:600">CA$\${Number(r.total_spent||0).toFixed(0)}</td>
+        <td style="color:#888;font-size:12px">\${(r.created_at||'').slice(0,10)}</td>
+        <td><button class="btn btn-ghost btn-sm" onclick="openCust(\${i})">Edit</button></td>
       </tr>\`).join('')}
       </tbody></table>\`;
-  }
-  // Load customer accounts
-  const accounts = await api('/api/admin/accounts');
-  if (!accounts || !accounts.length) {
-    document.getElementById('accounts-table').innerHTML='<div class="empty">No customer accounts yet</div>';
-  } else {
-    document.getElementById('accounts-table').innerHTML = \`<table>
-      <thead><tr><th>Name</th><th>Email</th><th>Account Created</th><th></th></tr></thead>
-      <tbody>\${accounts.map(a=>\`<tr>
-        <td style="font-weight:600">\${a.name}</td>
-        <td>\${a.email}</td>
-        <td style="color:#888;font-size:12px">\${(a.created_at||'').slice(0,10)}</td>
-        <td><button class="btn btn-blue btn-sm" onclick="openReset(\${a.id},'\${a.name.replace(/'/g,'')}')">Reset Password</button></td>
-      </tr>\`).join('')}
-      </tbody></table>\`;
+    window._custRows = rows;
   }
   await loadNotify();
+}
+
+function openCust(i) {
+  const r = window._custRows[i];
+  if (!r) return;
+  currentCustId = r.cust_id || null;
+  currentAcctId = r.acct_id || null;
+  document.getElementById('cm-name').textContent = r.name || 'Customer';
+  document.getElementById('cm-body').innerHTML = \`
+    <div class="grid-2" style="margin-bottom:20px">
+      <div class="stat"><div class="stat-label">Orders</div><div class="stat-value">\${r.order_count||0}</div></div>
+      <div class="stat"><div class="stat-label">Total Spent</div><div class="stat-value">CA$\${Number(r.total_spent||0).toFixed(0)}</div></div>
+    </div>
+    <div class="grid-2">
+      <div class="form-row"><label>Full Name</label><input id="cm-name-input" value="\${r.name||''}"></div>
+      <div class="form-row"><label>Email</label><input id="cm-email" value="\${r.email||''}" \${r.type==='account'?'':'readonly style="background:#f9f9f9"'}></div>
+      <div class="form-row"><label>Phone</label><input id="cm-phone" value="\${r.phone||''}"></div>
+      <div class="form-row"><label>Address</label><input id="cm-address" value="\${r.address||''}"></div>
+    </div>
+    <div class="form-row"><label>Notes</label><textarea id="cm-notes" rows="3">\${r.notes||''}</textarea></div>
+    \${r.type==='account' ? \`<div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+      <button class="btn btn-blue btn-sm" onclick="openResetFromModal('\${r.acct_id}','\${(r.name||'').replace(/'/g,'')}')">Reset Password</button>
+    </div>\` : ''}
+  \`;
+  openModal('cust-modal');
+}
+
+async function saveCust() {
+  const name    = document.getElementById('cm-name-input').value.trim();
+  const email   = document.getElementById('cm-email').value.trim();
+  const phone   = document.getElementById('cm-phone').value.trim();
+  const address = document.getElementById('cm-address').value.trim();
+  const notes   = document.getElementById('cm-notes').value;
+  const tasks = [];
+  // Update guest customer record
+  if (currentCustId) tasks.push(api('/api/admin/customers/'+currentCustId+'/notes','PATCH',{notes}));
+  // Update registered account
+  if (currentAcctId) tasks.push(api('/api/admin/accounts/'+currentAcctId,'PATCH',{name,email,phone}));
+  await Promise.all(tasks);
+  toast('Saved'); closeModal('cust-modal'); load();
+}
+
+function openResetFromModal(id, name) {
+  closeModal('cust-modal');
+  resetAccountId = id;
+  document.getElementById('reset-name').textContent = name;
+  document.getElementById('reset-pw').value = '';
+  openModal('reset-modal');
 }
 function openReset(id, name) {
   resetAccountId = id;
@@ -1078,7 +1161,7 @@ function openReset(id, name) {
   openModal('reset-modal');
 }
 function genTempPw() {
-  const chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+  const chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#';
   let pw = '';
   for (let i = 0; i < 10; i++) pw += chars[Math.floor(Math.random()*chars.length)];
   document.getElementById('reset-pw').value = pw;
@@ -1087,7 +1170,7 @@ async function saveReset() {
   const pw = document.getElementById('reset-pw').value.trim();
   if (!pw) { toast('Enter a password', true); return; }
   const r = await api('/api/admin/accounts/'+resetAccountId+'/password','PATCH',{password:pw});
-  if (r.ok) { toast('Password updated — share "'+pw+'" with the customer'); closeModal('reset-modal'); }
+  if (r.ok) { toast('Done — temp password: "'+pw+'"'); closeModal('reset-modal'); }
   else toast(r.error||'Error', true);
 }
 async function loadNotify() {
@@ -1116,44 +1199,8 @@ async function clearAllNotify() {
   const r = await api('/api/admin/notify-requests/clear','DELETE');
   if (r.ok) { toast('All cleared'); await loadNotify(); } else toast('Error',true);
 }
-async function openCust(id) {
-  currentCustId = id;
-  const custs = await api('/api/admin/customers');
-  const c = (custs||[]).find(x=>x.id===id)||{};
-  document.getElementById('cm-name').textContent = c.name || 'Customer';
-  document.getElementById('cm-body').innerHTML = \`
-    <div class="grid-2" style="margin-bottom:16px">
-      <div><label>Email</label><div>\${c.email||'—'}</div></div>
-      <div><label>Address</label><div>\${c.address||'—'}</div></div>
-      <div><label>Last Order</label><div>\${(c.last_order_at||'—').slice(0,10)}</div></div>
-      <div><label>Joined</label><div>\${(c.created_at||'—').slice(0,10)}</div></div>
-    </div>
-    <div class="grid-2" style="margin-bottom:16px">
-      <div class="stat"><div class="stat-label">Orders</div><div class="stat-value">\${c.order_count||0}</div></div>
-      <div class="stat"><div class="stat-label">Total Spent</div><div class="stat-value">CA$\${Number(c.total_spent||0).toFixed(0)}</div></div>
-    </div>
-    <div class="form-row"><label>Notes</label><textarea id="cm-notes" rows="3">\${c.notes||''}</textarea></div>
-  \`;
-  openModal('cust-modal');
-}
-async function saveCustNotes() {
-  const notes = document.getElementById('cm-notes').value;
-  await api('/api/admin/customers/'+currentCustId+'/notes','PATCH',{notes});
-  toast('Saved'); closeModal('cust-modal'); load();
-}
 load();
 </script>
-<!-- Customer modal -->
-<div class="modal-overlay" id="cust-modal">
-  <div class="modal">
-    <div class="modal-header"><h2 id="cm-name">Customer</h2><button class="close-btn" onclick="closeModal('cust-modal')">✕</button></div>
-    <div class="modal-body" id="cm-body"></div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('cust-modal')">Close</button>
-      <button class="btn btn-primary" onclick="saveCustNotes()">Save Notes</button>
-    </div>
-  </div>
-</div>
 </body></html>`);
     return;
   }
