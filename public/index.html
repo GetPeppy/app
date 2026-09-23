@@ -1133,12 +1133,6 @@ function removeItem(id) {
   updateCartBtn();
   renderCart();
 }
-item-price">CA$' + sub + '</div><button class="cart-remove" onclick="removeItem(\'' + id + '\')">&#x2715;</button></div></div>';
-  });
-  itemsEl.innerHTML = out;
-  if (totalEl) totalEl.textContent = 'CA$' + total;
-  if (footerEl) footerEl.style.display = 'block';
-}
 
 function showToast(msg) {
   var t = document.getElementById('toast');
