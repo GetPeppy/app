@@ -22,14 +22,36 @@ db.exec(`
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     order_ref TEXT UNIQUE NOT NULL,
     customer_name TEXT, customer_email TEXT, customer_address TEXT,
+    customer_city TEXT, customer_province TEXT, customer_postal TEXT, customer_phone TEXT,
     items TEXT NOT NULL,
     subtotal REAL NOT NULL,
+    shipping REAL NOT NULL DEFAULT 0,
+    total REAL NOT NULL DEFAULT 0,
     payment_method TEXT NOT NULL,
     payment_address TEXT,
-    status TEXT NOT NULL DEFAULT 'pending',
+    tracking_number TEXT,
+    status TEXT NOT NULL DEFAULT 'submitted',
     notes TEXT,
+    account_id INTEGER,
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+  CREATE TABLE IF NOT EXISTS customer_accounts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    email TEXT UNIQUE NOT NULL,
+    password_hash TEXT NOT NULL,
+    phone TEXT,
+    address TEXT,
+    city TEXT,
+    province TEXT,
+    postal TEXT,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+  CREATE TABLE IF NOT EXISTS customer_sessions (
+    token TEXT PRIMARY KEY,
+    account_id INTEGER NOT NULL,
+    created_at INTEGER NOT NULL
   );
   CREATE TABLE IF NOT EXISTS customers (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -210,6 +232,30 @@ function upsertCustomer(name, email, address) {
   }
 }
 
+// ── Customer account helpers ──────────────────────────────────────────────────
+function hashPassword(pw) {
+  return crypto.createHash('sha256').update(pw + 'peppy_salt_2026').digest('hex');
+}
+function createCustomerSession(accountId) {
+  const token = crypto.randomBytes(32).toString('hex');
+  db.prepare(`INSERT INTO customer_sessions(token,account_id,created_at) VALUES(?,?,?)`).run(token, accountId, Date.now());
+  return token;
+}
+function getCustomerFromSession(req) {
+  const token = getCookie(req, 'peppy_customer');
+  if (!token) return null;
+  const sess = db.prepare(`SELECT account_id, created_at FROM customer_sessions WHERE token=?`).get(token);
+  if (!sess) return null;
+  if (Date.now() - sess.created_at > 30 * 24 * 60 * 60 * 1000) {
+    db.prepare(`DELETE FROM customer_sessions WHERE token=?`).run(token);
+    return null;
+  }
+  return db.prepare(`SELECT * FROM customer_accounts WHERE id=?`).get(sess.account_id);
+}
+function calcShipping(subtotal) {
+  return subtotal >= 500 ? 0 : 25;
+}
+
 // ── Static files ──────────────────────────────────────────────────────────────
 const MIME = { '.html':'text/html', '.css':'text/css', '.js':'application/javascript',
                '.json':'application/json', '.png':'image/png', '.jpg':'image/jpeg',
@@ -253,8 +299,12 @@ tr:last-child td{border-bottom:none}
 tr:hover td{background:#FAFAFA}
 .badge{display:inline-block;padding:3px 10px;border-radius:100px;font-size:11px;font-weight:600;letter-spacing:.03em}
 .badge-pending{background:#FEF9C3;color:#854D0E}
+.badge-submitted{background:#EFF6FF;color:#1D4ED8}
+.badge-received{background:#FEF9C3;color:#854D0E}
+.badge-payment_confirmed{background:#DCFCE7;color:#166534}
 .badge-paid{background:#DCFCE7;color:#166534}
 .badge-shipped{background:#DBEAFE;color:#1E40AF}
+.badge-delivered{background:#F3F4F6;color:#374151}
 .badge-completed{background:#F3F4F6;color:#374151}
 .badge-cancelled{background:#FEE2E2;color:#991B1B}
 .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;border:none;font-family:inherit;transition:all .15s;text-decoration:none}
@@ -366,23 +416,103 @@ const server = http.createServer(async (req, res) => {
     const payAddr = data.payment_method === 'usdc' ? settings.usdc_address
                   : data.payment_method === 'btc'  ? settings.btc_address
                   : settings.etransfer_email;
+    const subtotal = data.subtotal || 0;
+    const shipping = calcShipping(subtotal);
+    const total = subtotal + shipping;
+
+    // Handle account creation if password provided
+    let accountId = null;
+    if (data.password && data.email) {
+      const existing = db.prepare(`SELECT id FROM customer_accounts WHERE email=?`).get(data.email);
+      if (existing) {
+        accountId = existing.id;
+      } else {
+        const r = db.prepare(`INSERT INTO customer_accounts(name,email,password_hash,phone,address,city,province,postal)
+          VALUES(?,?,?,?,?,?,?,?)`).run(data.name||'', data.email, hashPassword(data.password),
+          data.phone||'', data.address||'', data.city||'', data.province||'', data.postal||'');
+        accountId = r.lastInsertRowid;
+      }
+    }
+
     try {
-      db.prepare(`INSERT INTO orders(order_ref,customer_name,customer_email,customer_address,items,subtotal,payment_method,payment_address,status)
-        VALUES(?,?,?,?,?,?,?,?,'pending')`)
-        .run(ref, data.name||'', data.email||'', data.address||'',
-             JSON.stringify(data.items||[]), data.subtotal||0,
-             data.payment_method||'usdc', payAddr||'');
+      db.prepare(`INSERT INTO orders(order_ref,customer_name,customer_email,customer_address,customer_city,customer_province,customer_postal,customer_phone,items,subtotal,shipping,total,payment_method,payment_address,status,account_id)
+        VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,'submitted',?)`)
+        .run(ref, data.name||'', data.email||'', data.address||'', data.city||'', data.province||'', data.postal||'', data.phone||'',
+             JSON.stringify(data.items||[]), subtotal, shipping, total,
+             data.payment_method||'usdc', payAddr||'', accountId);
       upsertCustomer(data.name, data.email, data.address);
-      // Decrement inventory
       if (data.items) {
         for (const item of data.items) {
-          db.prepare(`UPDATE inventory SET quantity=MAX(0,quantity-?) WHERE id=?`).run(item.qty||1, item.id);
+          db.prepare(`UPDATE inventory SET quantity=MAX(0,quantity-?), in_stock=CASE WHEN MAX(0,quantity-?) = 0 THEN 0 ELSE in_stock END WHERE id=?`).run(item.qty||1, item.qty||1, item.id);
         }
       }
-      return json(res, { ok:true, ref, payment_address:payAddr });
+      // Create session if account created
+      let sessionToken = null;
+      if (accountId && data.password) sessionToken = createCustomerSession(accountId);
+      return json(res, { ok:true, ref, payment_address:payAddr, shipping, total, sessionToken });
     } catch(e) {
       return json(res, { ok:false, error:e.message }, 400);
     }
+  }
+
+  // ── Public: shipping calc ────────────────────────────────────────────────
+  if (pathname === '/api/shipping' && method === 'POST') {
+    const data = await body(req);
+    return json(res, { shipping: calcShipping(data.subtotal || 0) });
+  }
+
+  // ── Customer account: register ───────────────────────────────────────────
+  if (pathname === '/api/account/register' && method === 'POST') {
+    const data = await body(req);
+    if (!data.email || !data.password || !data.name) return json(res, { ok:false, error:'Missing fields' }, 400);
+    const existing = db.prepare(`SELECT id FROM customer_accounts WHERE email=?`).get(data.email);
+    if (existing) return json(res, { ok:false, error:'Email already registered' }, 400);
+    const r = db.prepare(`INSERT INTO customer_accounts(name,email,password_hash) VALUES(?,?,?)`).run(data.name, data.email, hashPassword(data.password));
+    const token = createCustomerSession(r.lastInsertRowid);
+    res.writeHead(200, { 'Content-Type':'application/json', 'Set-Cookie':`peppy_customer=${token}; Path=/; HttpOnly; SameSite=Strict; Max-Age=2592000` });
+    return res.end(JSON.stringify({ ok:true }));
+  }
+
+  // ── Customer account: login ──────────────────────────────────────────────
+  if (pathname === '/api/account/login' && method === 'POST') {
+    const data = await body(req);
+    const acct = db.prepare(`SELECT * FROM customer_accounts WHERE email=? AND password_hash=?`).get(data.email||'', hashPassword(data.password||''));
+    if (!acct) return json(res, { ok:false, error:'Invalid email or password' }, 401);
+    const token = createCustomerSession(acct.id);
+    res.writeHead(200, { 'Content-Type':'application/json', 'Set-Cookie':`peppy_customer=${token}; Path=/; HttpOnly; SameSite=Strict; Max-Age=2592000` });
+    return res.end(JSON.stringify({ ok:true, name: acct.name }));
+  }
+
+  // ── Customer account: logout ─────────────────────────────────────────────
+  if (pathname === '/api/account/logout' && method === 'POST') {
+    const token = getCookie(req, 'peppy_customer');
+    if (token) db.prepare(`DELETE FROM customer_sessions WHERE token=?`).run(token);
+    res.writeHead(200, { 'Content-Type':'application/json', 'Set-Cookie':'peppy_customer=; Path=/; Max-Age=0' });
+    return res.end(JSON.stringify({ ok:true }));
+  }
+
+  // ── Customer account: me ─────────────────────────────────────────────────
+  if (pathname === '/api/account/me' && method === 'GET') {
+    const acct = getCustomerFromSession(req);
+    if (!acct) return json(res, { ok:false }, 401);
+    return json(res, { ok:true, name:acct.name, email:acct.email });
+  }
+
+  // ── Customer account: my orders ──────────────────────────────────────────
+  if (pathname === '/api/account/orders' && method === 'GET') {
+    const acct = getCustomerFromSession(req);
+    if (!acct) return json(res, { ok:false }, 401);
+    const orders = db.prepare(`SELECT order_ref,status,tracking_number,total,shipping,subtotal,created_at,items,payment_method FROM orders WHERE account_id=? OR customer_email=? ORDER BY created_at DESC`).all(acct.id, acct.email);
+    return json(res, orders);
+  }
+
+  // ── Customer account: lookup order by ref ────────────────────────────────
+  if (pathname.match(/^\/api\/order\/[A-Z0-9-]+$/) && method === 'GET') {
+    const ref = pathname.split('/').pop();
+    const email = new URL(req.url, 'http://x').searchParams.get('email') || '';
+    const order = db.prepare(`SELECT order_ref,status,tracking_number,total,shipping,subtotal,created_at,items,payment_method,customer_name FROM orders WHERE order_ref=? AND (customer_email=? OR ?='')`).get(ref, email, email);
+    if (!order) return json(res, { ok:false, error:'Order not found' }, 404);
+    return json(res, { ok:true, order });
   }
 
   // ── Public: get payment addresses ────────────────────────────────────────
@@ -501,6 +631,12 @@ const server = http.createServer(async (req, res) => {
       const id = pathname.split('/')[4];
       const data = await body(req);
       db.prepare(`UPDATE orders SET notes=?,updated_at=datetime('now') WHERE id=?`).run(data.notes, id);
+      return json(res, { ok:true });
+    }
+    if (pathname.match(/^\/api\/admin\/orders\/\d+\/tracking$/) && method === 'PATCH') {
+      const id = pathname.split('/')[4];
+      const data = await body(req);
+      db.prepare(`UPDATE orders SET tracking_number=?,updated_at=datetime('now') WHERE id=?`).run(data.tracking_number, id);
       return json(res, { ok:true });
     }
     if (pathname.match(/^\/api\/admin\/orders\/\d+$/) && method === 'GET') {
@@ -688,7 +824,7 @@ const server = http.createServer(async (req, res) => {
 </div>
 
 <script>
-const STATUSES = ['pending','paid','shipped','completed','cancelled'];
+const STATUSES = ['submitted','received','payment_confirmed','shipped','delivered','cancelled'];
 let currentOrderId = null;
 
 async function loadStats() {
@@ -744,12 +880,13 @@ async function openOrder(id) {
   const o = await api('/api/admin/orders/'+id);
   document.getElementById('m-ref').textContent = o.order_ref;
   const items = JSON.parse(o.items || '[]');
+  const statusLabel = {submitted:'Submitted',received:'Received',payment_confirmed:'Payment Confirmed',shipped:'Shipped',delivered:'Delivered',cancelled:'Cancelled'};
   document.getElementById('m-body').innerHTML = \`
     <div class="grid-2" style="margin-bottom:16px">
       <div><label>Customer</label><div>\${o.customer_name||'—'}</div></div>
       <div><label>Email</label><div>\${o.customer_email||'—'}</div></div>
-      <div><label>Address</label><div>\${o.customer_address||'—'}</div></div>
-      <div><label>Status</label><span class="badge badge-\${o.status}">\${o.status}</span></div>
+      <div><label>Address</label><div>\${o.customer_address||''} \${o.customer_city||''} \${o.customer_province||''} \${o.customer_postal||''}</div></div>
+      <div><label>Status</label><span class="badge badge-\${o.status}">\${statusLabel[o.status]||o.status}</span></div>
     </div>
     <div class="card" style="margin-bottom:16px">
       <table>
@@ -758,10 +895,16 @@ async function openOrder(id) {
       </table>
     </div>
     <div class="grid-2" style="margin-bottom:16px">
-      <div><label>Total</label><div style="font-size:20px;font-weight:700">CA$\${Number(o.subtotal).toFixed(0)}</div></div>
+      <div><label>Subtotal</label><div style="font-size:18px;font-weight:700">CA$\${Number(o.subtotal||0).toFixed(0)}</div></div>
+      <div><label>Shipping</label><div style="font-size:18px;font-weight:700">\${Number(o.shipping||0)===0?'Free':'CA$'+Number(o.shipping||0).toFixed(0)}</div></div>
+      <div><label>Total</label><div style="font-size:22px;font-weight:700;color:#3B6FD4">CA$\${Number(o.total||o.subtotal||0).toFixed(0)}</div></div>
       <div><label>Payment</label><div style="text-transform:uppercase">\${o.payment_method}</div>
         \${o.payment_address?'<div style="font-size:11px;color:#888;word-break:break-all">'+o.payment_address+'</div>':''}
       </div>
+    </div>
+    <div class="form-row">
+      <label>Tracking Number</label>
+      <input id="m-tracking" value="\${o.tracking_number||''}" placeholder="Enter courier tracking number">
     </div>
     <div class="form-row">
       <label>Admin Notes</label>
@@ -773,9 +916,10 @@ async function openOrder(id) {
 
 async function saveNotes() {
   const notes = document.getElementById('m-notes').value;
-  const r = await api('/api/admin/orders/'+currentOrderId+'/notes','PATCH',{notes});
-  if (r.ok) toast('Notes saved');
-  else toast('Error', true);
+  const tracking = document.getElementById('m-tracking') ? document.getElementById('m-tracking').value : '';
+  await api('/api/admin/orders/'+currentOrderId+'/notes','PATCH',{notes});
+  if (tracking !== undefined) await api('/api/admin/orders/'+currentOrderId+'/tracking','PATCH',{tracking_number:tracking});
+  if (r.ok) toast('Saved');
 }
 
 loadStats(); loadOrders();
