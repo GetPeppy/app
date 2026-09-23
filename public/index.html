@@ -869,7 +869,7 @@ function renderGrid() {
     if (p.inStock) {
       html += '<button class="add-btn" onclick="event.stopPropagation();quickAdd(' + idx + ')">Add to Cart</button>';
     } else {
-      html += '<button class="notify-btn" onclick="event.stopPropagation()">Notify Me</button>';
+      html += '<button class="notify-btn" onclick="event.stopPropagation();openNotify(\'' + p.id + '\',\'' + p.name + ' ' + p.dose + '\')">Notify Me</button>';
     }
     html += '</div></div>';
     return html;
@@ -1125,6 +1125,45 @@ function showProduct(idx) {
 
 document.addEventListener('keydown', function(e){ if (e.key === 'Escape') { closeModal(); closeCart(); } });
 renderGrid();
+</script>
+
+<!-- Notify Me Modal -->
+<div id="notify-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:300;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:12px;width:420px;max-width:95vw;padding:32px;box-shadow:0 20px 60px rgba(0,0,0,.2);">
+    <h2 style="font-family:'Fraunces',serif;font-size:22px;font-weight:300;margin-bottom:8px;">Notify Me</h2>
+    <p style="font-size:14px;color:#888;margin-bottom:20px;" id="notify-product-label">We'll email you when this product is back in stock.</p>
+    <input id="notify-email" type="email" placeholder="your@email.com"
+      style="width:100%;padding:12px 14px;border:1px solid #E8E8E8;border-radius:6px;font-size:14px;font-family:'Inter',sans-serif;outline:none;box-sizing:border-box;margin-bottom:12px;">
+    <div style="display:flex;gap:10px;">
+      <button onclick="submitNotify()" style="flex:1;background:#3B6FD4;color:#fff;border:none;padding:13px;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;">Notify Me</button>
+      <button onclick="document.getElementById('notify-modal').style.display='none'" style="padding:13px 20px;background:none;border:1px solid #E8E8E8;border-radius:6px;font-size:14px;cursor:pointer;font-family:'Inter',sans-serif;">Cancel</button>
+    </div>
+  </div>
+</div>
+<script>
+var _notifyProductId = null;
+function openNotify(productId, productName) {
+  _notifyProductId = productId;
+  document.getElementById('notify-product-label').textContent = 'We\'ll email you when ' + productName + ' is back in stock.';
+  document.getElementById('notify-email').value = '';
+  var m = document.getElementById('notify-modal');
+  m.style.display = 'flex';
+  setTimeout(function(){ document.getElementById('notify-email').focus(); }, 100);
+}
+async function submitNotify() {
+  var email = document.getElementById('notify-email').value.trim();
+  if (!email || !email.includes('@')) { alert('Please enter a valid email.'); return; }
+  var r = await fetch('/api/notify', { method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ product_id: _notifyProductId, email: email }) });
+  var data = await r.json();
+  if (data.ok) {
+    document.getElementById('notify-modal').style.display = 'none';
+    alert('You\'re on the list! We\'ll email you when it\'s back.');
+  }
+}
+document.getElementById('notify-modal').addEventListener('click', function(e) {
+  if (e.target === this) this.style.display = 'none';
+});
 </script>
 </body>
 </html>
