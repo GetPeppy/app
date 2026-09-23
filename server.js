@@ -105,8 +105,14 @@ if (!orderCols.includes('total'))             db.exec(`ALTER TABLE orders ADD CO
 if (!orderCols.includes('tracking_number'))   db.exec(`ALTER TABLE orders ADD COLUMN tracking_number TEXT`);
 if (!orderCols.includes('account_id'))        db.exec(`ALTER TABLE orders ADD COLUMN account_id INTEGER`);
 if (!orderCols.includes('status'))            db.exec(`ALTER TABLE orders ADD COLUMN status TEXT NOT NULL DEFAULT 'submitted'`);
-// Fix status default on old records
 db.prepare(`UPDATE orders SET status='submitted' WHERE status='pending'`).run();
+
+const custCols = db.prepare(`PRAGMA table_info(customers)`).all().map(r => r.name);
+if (!custCols.includes('street'))   db.exec(`ALTER TABLE customers ADD COLUMN street TEXT`);
+if (!custCols.includes('city'))     db.exec(`ALTER TABLE customers ADD COLUMN city TEXT`);
+if (!custCols.includes('province')) db.exec(`ALTER TABLE customers ADD COLUMN province TEXT`);
+if (!custCols.includes('postal'))   db.exec(`ALTER TABLE customers ADD COLUMN postal TEXT`);
+if (!custCols.includes('phone'))    db.exec(`ALTER TABLE customers ADD COLUMN phone TEXT`);
 
 // Seed inventory from product list
 const PRODUCTS = [
@@ -690,15 +696,20 @@ const server = http.createServer(async (req, res) => {
 
     // Customers
     if (pathname === '/api/admin/customers' && method === 'GET') {
-      const rows = db.prepare(`SELECT c.*, COUNT(o.id) as order_count, SUM(o.subtotal) as total_spent
+      const rows = db.prepare(`SELECT c.*, COUNT(o.id) as order_count,
+        COALESCE(SUM(CASE WHEN o.status != 'cancelled' THEN o.subtotal ELSE 0 END), 0) as total_spent
         FROM customers c LEFT JOIN orders o ON o.customer_email=c.email
         GROUP BY c.id ORDER BY c.created_at DESC`).all();
       return json(res, rows);
     }
-    if (pathname.match(/^\/api\/admin\/customers\/\d+\/notes$/) && method === 'PATCH') {
+    if (pathname.match(/^\/api\/admin\/customers\/\d+$/) && method === 'PATCH') {
       const id = pathname.split('/')[4];
       const data = await body(req);
-      db.prepare(`UPDATE customers SET notes=? WHERE id=?`).run(data.notes, id);
+      db.prepare(`UPDATE customers SET name=COALESCE(?,name), phone=COALESCE(?,phone),
+        street=COALESCE(?,street), city=COALESCE(?,city), province=COALESCE(?,province),
+        postal=COALESCE(?,postal), notes=COALESCE(?,notes) WHERE id=?`)
+        .run(data.name||null, data.phone||null, data.street||null, data.city||null,
+             data.province||null, data.postal||null, data.notes||null, id);
       return json(res, { ok:true });
     }
     // Admin: list customer accounts (for password reset)
@@ -1077,12 +1088,14 @@ async function load() {
     ...(accounts||[]).map(a => {
       const cust = (custs||[]).find(c=>c.email===a.email)||{};
       return { type:'account', acct_id:a.id, cust_id:cust.id, name:a.name, email:a.email,
-               phone:a.phone||cust.phone||'', address:cust.address||'',
+               phone:a.phone||cust.phone||'', street:cust.street||cust.address||'',
+               city:cust.city||'', province:cust.province||'', postal:cust.postal||'',
                order_count:cust.order_count||0, total_spent:cust.total_spent||0,
                created_at:a.created_at, notes:cust.notes||'' };
     }),
     ...guestCusts.map(c => ({ type:'guest', cust_id:c.id, name:c.name, email:c.email,
-               phone:c.phone||'', address:c.address||'',
+               phone:c.phone||'', street:c.street||c.address||'',
+               city:c.city||'', province:c.province||'', postal:c.postal||'',
                order_count:c.order_count||0, total_spent:c.total_spent||0,
                created_at:c.created_at, notes:c.notes||'' }))
   ];
@@ -1122,7 +1135,10 @@ function openCust(i) {
       <div class="form-row"><label>Full Name</label><input id="cm-name-input" value="\${r.name||''}"></div>
       <div class="form-row"><label>Email</label><input id="cm-email" value="\${r.email||''}" \${r.type==='account'?'':'readonly style="background:#f9f9f9"'}></div>
       <div class="form-row"><label>Phone</label><input id="cm-phone" value="\${r.phone||''}"></div>
-      <div class="form-row"><label>Address</label><input id="cm-address" value="\${r.address||''}"></div>
+      <div class="form-row"><label>Street Address</label><input id="cm-street" value="\${r.street||r.address||''}"></div>
+      <div class="form-row"><label>City</label><input id="cm-city" value="\${r.city||''}"></div>
+      <div class="form-row"><label>Province</label><select id="cm-province">\${['','AB','BC','MB','NB','NL','NS','NT','NU','ON','PE','QC','SK','YT'].map(p=>\`<option value="\${p}" \${p===(r.province||'')?'selected':''}>\${p||'Select province'}</option>\`).join('')}</select></div>
+      <div class="form-row"><label>Postal Code</label><input id="cm-postal" value="\${r.postal||''}"></div>
     </div>
     <div class="form-row"><label>Notes</label><textarea id="cm-notes" rows="3">\${r.notes||''}</textarea></div>
     \${r.type==='account' ? \`<div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
@@ -1133,15 +1149,16 @@ function openCust(i) {
 }
 
 async function saveCust() {
-  const name    = document.getElementById('cm-name-input').value.trim();
-  const email   = document.getElementById('cm-email').value.trim();
-  const phone   = document.getElementById('cm-phone').value.trim();
-  const address = document.getElementById('cm-address').value.trim();
-  const notes   = document.getElementById('cm-notes').value;
+  const name     = document.getElementById('cm-name-input').value.trim();
+  const email    = document.getElementById('cm-email').value.trim();
+  const phone    = document.getElementById('cm-phone').value.trim();
+  const street   = document.getElementById('cm-street').value.trim();
+  const city     = document.getElementById('cm-city').value.trim();
+  const province = document.getElementById('cm-province').value;
+  const postal   = document.getElementById('cm-postal').value.trim();
+  const notes    = document.getElementById('cm-notes').value;
   const tasks = [];
-  // Update guest customer record
-  if (currentCustId) tasks.push(api('/api/admin/customers/'+currentCustId+'/notes','PATCH',{notes}));
-  // Update registered account
+  if (currentCustId) tasks.push(api('/api/admin/customers/'+currentCustId,'PATCH',{name,phone,street,city,province,postal,notes}));
   if (currentAcctId) tasks.push(api('/api/admin/accounts/'+currentAcctId,'PATCH',{name,email,phone}));
   await Promise.all(tasks);
   toast('Saved'); closeModal('cust-modal'); load();
