@@ -1037,22 +1037,37 @@ async function loadCOAs() {
     document.getElementById('coa-table').innerHTML = '<div class="empty">No COAs uploaded yet</div>';
     return;
   }
-  document.getElementById('coa-table').innerHTML = \`<table>
-    <thead><tr><th>Product</th><th>Label</th><th>Lab</th><th>Date</th><th>Purity</th><th>Status</th><th></th></tr></thead>
-    <tbody>\${coas.map(c=>\`<tr>
-      <td style="font-weight:600;white-space:nowrap">\${PROD_NAMES[c.product_id]||c.product_id}</td>
-      <td style="font-size:12px;color:#555">\${c.label}</td>
-      <td>\${c.lab||'—'}</td>
-      <td style="white-space:nowrap">\${c.date||'—'}</td>
-      <td style="color:#16A34A;font-weight:600">\${c.purity||'—'}</td>
-      <td>\${c.is_current ? '<span class="badge badge-paid">Current</span>' : '<span style="color:#888;font-size:12px">—</span>'}</td>
-      <td style="display:flex;gap:6px;white-space:nowrap">
-        <a class="btn btn-ghost btn-sm" href="/coa/\${c.product_id}/\${c.filename}" target="_blank">View</a>
-        \${!c.is_current ? \`<button class="btn btn-blue btn-sm" onclick="setCurrent(\${c.id})">Set Current</button>\` : ''}
-        <button class="btn btn-danger btn-sm" onclick="deleteCOA(\${c.id})">Delete</button>
-      </td>
-    </tr>\`).join('')}
-    </tbody></table>\`;
+  // Group by product
+  const groups = {};
+  coas.forEach(function(c) {
+    if (!groups[c.product_id]) groups[c.product_id] = [];
+    groups[c.product_id].push(c);
+  });
+  const prodOrder = ['retatrutide-10mg','retatrutide-20mg','mots-c-10mg','mots-c-40mg','klow-80mg','glow-70mg','tesamorelin-10mg','cjc-ipamorelin-10mg','nad-500mg','nad-1000mg','5amino1mq-50mg','semax-10mg','selank-10mg'];
+  let html = '';
+  prodOrder.forEach(function(pid) {
+    if (!groups[pid] || !groups[pid].length) return;
+    html += \`<div style="margin-bottom:0">
+      <div style="padding:12px 18px;background:#F7F9FF;border-bottom:1px solid #DDE6F5;font-weight:700;font-size:13px;color:#3B6FD4">\${PROD_NAMES[pid]||pid}</div>
+      <table style="width:100%">
+        <thead><tr><th>Label</th><th>Lab</th><th>Date</th><th>Purity</th><th>Status</th><th></th></tr></thead>
+        <tbody>\${groups[pid].map(c=>\`<tr>
+          <td style="font-size:12px;color:#555">\${c.label}</td>
+          <td>\${c.lab||'—'}</td>
+          <td style="white-space:nowrap">\${c.date||'—'}</td>
+          <td style="color:#16A34A;font-weight:600">\${c.purity||'—'}</td>
+          <td>\${c.is_current ? '<span class="badge badge-paid">Current</span>' : '<span style="color:#888;font-size:12px">—</span>'}</td>
+          <td style="display:flex;gap:6px;white-space:nowrap">
+            <a class="btn btn-ghost btn-sm" href="/coa/\${c.product_id}/\${c.filename}" target="_blank">View</a>
+            \${!c.is_current ? \`<button class="btn btn-blue btn-sm" onclick="setCurrent(\${c.id})">Set Current</button>\` : ''}
+            <button class="btn btn-danger btn-sm" onclick="deleteCOA(\${c.id})">Delete</button>
+          </td>
+        </tr>\`).join('')}
+        </tbody>
+      </table>
+    </div>\`;
+  });
+  document.getElementById('coa-table').innerHTML = html;
 }
 
 async function setCurrent(id) {
