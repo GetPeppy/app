@@ -1514,6 +1514,7 @@ async function renderAccountPage() {
       + '<input id="acc-reg-pw" type="password" placeholder="Min 8 characters" style="width:100%;padding:11px 14px;border:1px solid #E0E0E0;border-radius:6px;font-size:14px;font-family:Inter,sans-serif;outline:none;box-sizing:border-box"></div>'
       + '<button onclick="accountRegister()" style="width:100%;padding:13px;background:#111;color:#fff;border:none;border-radius:7px;font-size:14px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">Create Account</button>'
       + '</div></div>';
+      return;
     }
     _customerName = me.name;
     var orders = await fetch('/api/account/orders').then(function(r){return r.json();});
