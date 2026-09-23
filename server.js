@@ -240,15 +240,17 @@ function redirect(res, url) {
   res.writeHead(302, { Location: url });
   res.end();
 }
-function upsertCustomer(name, email, address) {
+function upsertCustomer(data) {
+  const { name, email, address, city, province, postal, phone } = data;
   if (!email) return;
   const existing = db.prepare(`SELECT id FROM customers WHERE email=?`).get(email);
   if (existing) {
-    db.prepare(`UPDATE customers SET name=COALESCE(?,name), address=COALESCE(?,address), last_order_at=datetime('now') WHERE email=?`)
-      .run(name || null, address || null, email);
+    db.prepare(`UPDATE customers SET name=COALESCE(?,name), street=COALESCE(?,street), city=COALESCE(?,city),
+      province=COALESCE(?,province), postal=COALESCE(?,postal), phone=COALESCE(?,phone), last_order_at=datetime('now') WHERE email=?`)
+      .run(name||null, address||null, city||null, province||null, postal||null, phone||null, email);
   } else {
-    db.prepare(`INSERT INTO customers(name,email,address,last_order_at) VALUES(?,?,?,datetime('now'))`)
-      .run(name || null, email, address || null);
+    db.prepare(`INSERT INTO customers(name,email,street,city,province,postal,phone,last_order_at) VALUES(?,?,?,?,?,?,?,datetime('now'))`)
+      .run(name||null, email, address||null, city||null, province||null, postal||null, phone||null);
   }
 }
 
@@ -475,7 +477,7 @@ const server = http.createServer(async (req, res) => {
         .run(ref, data.name||'', data.email||'', data.address||'', data.city||'', data.province||'', data.postal||'', data.phone||'',
              JSON.stringify(data.items||[]), subtotal, shipping, total,
              data.payment_method||'usdc', payAddr||'', accountId);
-      upsertCustomer(data.name, data.email, data.address);
+      upsertCustomer({ name:data.name, email:data.email, address:data.address, city:data.city, province:data.province, postal:data.postal, phone:data.phone });
       if (data.items) {
         for (const item of data.items) {
           db.prepare(`UPDATE inventory SET quantity=MAX(0,quantity-?), in_stock=CASE WHEN MAX(0,quantity-?) = 0 THEN 0 ELSE in_stock END WHERE id=?`).run(item.qty||1, item.qty||1, item.id);
@@ -716,6 +718,16 @@ const server = http.createServer(async (req, res) => {
     if (pathname === '/api/admin/accounts' && method === 'GET') {
       const accounts = db.prepare(`SELECT id, name, email, created_at FROM customer_accounts ORDER BY created_at DESC`).all();
       return json(res, accounts);
+    }
+    // Admin: convert guest customer to account
+    if (pathname === '/api/admin/accounts/convert' && method === 'POST') {
+      const data = await body(req);
+      if (!data.email || !data.name || !data.password) return json(res, { ok:false, error:'Missing fields' }, 400);
+      const existing = db.prepare(`SELECT id FROM customer_accounts WHERE email=?`).get(data.email);
+      if (existing) return json(res, { ok:false, error:'Account already exists for this email' }, 400);
+      db.prepare(`INSERT INTO customer_accounts(name,email,password_hash) VALUES(?,?,?)`)
+        .run(data.name, data.email, hashPassword(data.password));
+      return json(res, { ok:true });
     }
     // Admin: update customer account details
     if (pathname.match(/^\/api\/admin\/accounts\/\d+$/) && method === 'PATCH') {
@@ -1143,7 +1155,13 @@ function openCust(i) {
     <div class="form-row"><label>Notes</label><textarea id="cm-notes" rows="3">\${r.notes||''}</textarea></div>
     \${r.type==='account' ? \`<div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
       <button class="btn btn-blue btn-sm" onclick="openResetFromModal('\${r.acct_id}','\${(r.name||'').replace(/'/g,'')}')">Reset Password</button>
-    </div>\` : ''}
+    </div>\` : \`<div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+      <p style="font-size:12px;color:#888;margin-bottom:10px">This customer ordered as a guest. Create a login for them so they can track orders.</p>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input id="cm-convert-pw" type="text" placeholder="Set a temporary password" style="flex:1;padding:8px 12px;border:1px solid #E0E0E0;border-radius:6px;font-size:13px;font-family:Inter,sans-serif">
+        <button class="btn btn-blue btn-sm" onclick="convertToAccount()">Create Account</button>
+      </div>
+    </div>\`}
   \`;
   openModal('cust-modal');
 }
@@ -1170,6 +1188,15 @@ function openResetFromModal(id, name) {
   document.getElementById('reset-name').textContent = name;
   document.getElementById('reset-pw').value = '';
   openModal('reset-modal');
+}
+async function convertToAccount() {
+  const pw = (document.getElementById('cm-convert-pw')||{}).value||'';
+  if (!pw) { toast('Enter a temporary password first', true); return; }
+  const row = window._custRows.find(function(r){ return r.cust_id === currentCustId; });
+  if (!row) return;
+  const r = await api('/api/admin/accounts/convert','POST',{name:row.name,email:row.email,password:pw});
+  if (r.ok) { toast('Account created — share password "'+pw+'" with '+row.name); closeModal('cust-modal'); load(); }
+  else toast(r.error||'Error', true);
 }
 function openReset(id, name) {
   resetAccountId = id;
