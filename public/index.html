@@ -1103,24 +1103,25 @@ function renderCart() {
     var lineTotal = p.price * qty;
     total += lineTotal;
     out += '<div class="cart-item">';
-    out += '<div class="cart-item-img">' + (p.img ? '<img src="'+p.img+'" alt="'+p.name+'">' : '') + '</div>';
+    out += '<div class="cart-item-img">' + (p.img ? '<img src="' + p.img + '" alt="' + p.name + '">' : '') + '</div>';
     out += '<div class="cart-item-info">';
     out += '<div class="cart-item-name">' + p.name + '</div>';
     out += '<div class="cart-item-dose">' + p.dose + '</div>';
     out += '<div class="cart-item-qty">';
-    out += '<button class="cart-qty-btn" onclick="changeQty(''+id+'',-1)">−</button>';
+    out += '<button class="cart-qty-btn" data-id="' + id + '" data-d="-1" onclick="changeQty(this.dataset.id,parseInt(this.dataset.d))">−</button>';
     out += '<span class="cart-qty-num">' + qty + '</span>';
-    out += '<button class="cart-qty-btn" onclick="changeQty(''+id+'',1)">+</button>';
+    out += '<button class="cart-qty-btn" data-id="' + id + '" data-d="1" onclick="changeQty(this.dataset.id,parseInt(this.dataset.d))">+</button>';
     out += '</div></div>';
     out += '<div class="cart-item-right">';
     out += '<div class="cart-item-price">CA$' + lineTotal + '</div>';
-    out += '<button class="cart-remove" onclick="removeItem(''+id+'')" aria-label="Remove">✕</button>';
+    out += '<button class="cart-remove" data-id="' + id + '" onclick="removeItem(this.dataset.id)" aria-label="Remove">✕</button>';
     out += '</div></div>';
   });
   itemsEl.innerHTML = out;
   if (totalEl) totalEl.textContent = 'CA$' + total;
   if (footerEl) footerEl.style.display = 'block';
 }
+
 function changeQty(id, delta) {
   cart[id] = (cart[id] || 1) + delta;
   if (cart[id] <= 0) delete cart[id];
