@@ -1515,7 +1515,6 @@ async function renderAccountPage() {
       + '<button onclick="accountRegister()" style="width:100%;padding:13px;background:#111;color:#fff;border:none;border-radius:7px;font-size:14px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">Create Account</button>'
       + '</div></div>';
       return;
-    }
     _customerName = me.name;
     var orders = await fetch('/api/account/orders').then(function(r){return r.json();});
     var STATUS_LABEL={submitted:'Submitted',received:'Received',payment_confirmed:'Payment Confirmed',shipped:'Shipped',delivered:'Delivered',cancelled:'Cancelled'};
