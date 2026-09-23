@@ -94,6 +94,20 @@ db.exec(`
   INSERT OR IGNORE INTO settings VALUES ('site_name','Peppy');
 `);
 
+// ── Migrations — add columns to existing tables if missing ───────────────────
+const orderCols = db.prepare(`PRAGMA table_info(orders)`).all().map(r => r.name);
+if (!orderCols.includes('customer_city'))     db.exec(`ALTER TABLE orders ADD COLUMN customer_city TEXT`);
+if (!orderCols.includes('customer_province')) db.exec(`ALTER TABLE orders ADD COLUMN customer_province TEXT`);
+if (!orderCols.includes('customer_postal'))   db.exec(`ALTER TABLE orders ADD COLUMN customer_postal TEXT`);
+if (!orderCols.includes('customer_phone'))    db.exec(`ALTER TABLE orders ADD COLUMN customer_phone TEXT`);
+if (!orderCols.includes('shipping'))          db.exec(`ALTER TABLE orders ADD COLUMN shipping REAL NOT NULL DEFAULT 0`);
+if (!orderCols.includes('total'))             db.exec(`ALTER TABLE orders ADD COLUMN total REAL NOT NULL DEFAULT 0`);
+if (!orderCols.includes('tracking_number'))   db.exec(`ALTER TABLE orders ADD COLUMN tracking_number TEXT`);
+if (!orderCols.includes('account_id'))        db.exec(`ALTER TABLE orders ADD COLUMN account_id INTEGER`);
+if (!orderCols.includes('status'))            db.exec(`ALTER TABLE orders ADD COLUMN status TEXT NOT NULL DEFAULT 'submitted'`);
+// Fix status default on old records
+db.prepare(`UPDATE orders SET status='submitted' WHERE status='pending'`).run();
+
 // Seed inventory from product list
 const PRODUCTS = [
   { id:'retatrutide-10mg', name:'Retatrutide', dose:'10mg', price:90 },

@@ -331,25 +331,34 @@ footer { background: #fff; border-top: 1px solid var(--border); padding: 40px 48
 
 
 /* ── Checkout ─────────────────────────────────────────────── */
-.checkout-layout { display:grid;grid-template-columns:1fr 400px;gap:48px;align-items:start; }
-.checkout-heading { font-family:'Fraunces',serif;font-size:22px;font-weight:300;letter-spacing:-0.5px;margin-bottom:20px;color:#111; }
-.form-row-2 { display:grid;grid-template-columns:1fr 1fr;gap:16px; }
-.form-row-3 { display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px; }
-.pay-methods { display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px; }
-.pay-opt { border:1px solid #E8E8E8;border-radius:8px;padding:14px 16px;cursor:pointer;transition:all .15s; }
-.pay-opt.active { border-color:#3B6FD4;background:#EEF3FB; }
-.pay-opt-name { font-size:14px;font-weight:600;color:#111; }
+.checkout-layout { display:grid;grid-template-columns:1fr 380px;gap:48px;align-items:start;max-width:1000px; }
+.checkout-heading { font-family:'Fraunces',serif;font-size:24px;font-weight:300;letter-spacing:-0.5px;margin:28px 0 18px;color:#111;padding-bottom:12px;border-bottom:1px solid var(--border); }
+.checkout-heading:first-child { margin-top:0; }
+.co-field { display:block;width:100%;padding:11px 14px;border:1px solid #E0E0E0;border-radius:6px;font-size:14px;font-family:'Inter',sans-serif;color:#111;outline:none;transition:border .15s;box-sizing:border-box; }
+.co-field:focus { border-color:var(--accent);box-shadow:0 0 0 3px rgba(59,111,212,.08); }
+.co-label { display:block;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#666;margin-bottom:6px; }
+.co-row { margin-bottom:16px; }
+.co-row-2 { display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px; }
+.co-row-3 { display:grid;grid-template-columns:1fr 120px 130px;gap:12px;margin-bottom:16px; }
+.pay-methods { display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:24px; }
+.pay-opt { border:2px solid #E8E8E8;border-radius:8px;padding:14px;cursor:pointer;transition:all .15s; }
+.pay-opt.active { border-color:var(--accent);background:#EEF3FB; }
+.pay-opt-name { font-size:14px;font-weight:700;color:#111; }
 .pay-opt-sub { font-size:11px;color:#888;margin-top:3px; }
-.co-submit-btn { width:100%;padding:16px;background:#3B6FD4;color:#fff;border:none;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer;margin-top:24px;font-family:'Inter',sans-serif;transition:opacity .15s; }
+.co-account-box { margin-top:20px;padding:20px;background:#F7F9FF;border-radius:8px;border:1px solid #DDE6F5; }
+.co-account-box p { font-size:13px;font-weight:600;color:#111;margin-bottom:12px; }
+.co-submit-btn { width:100%;padding:16px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer;margin-top:24px;font-family:'Inter',sans-serif;transition:opacity .15s; }
 .co-submit-btn:hover { opacity:.88; }
 .co-submit-btn:disabled { opacity:.5;cursor:not-allowed; }
-.co-legal { font-size:11px;color:#888;margin-top:12px;line-height:1.6;text-align:center; }
-.checkout-summary-col { background:#F7F9FF;border-radius:10px;padding:28px;border:1px solid #DDE6F5;position:sticky;top:80px; }
-.co-items { margin-bottom:16px;border-bottom:1px solid #DDE6F5;padding-bottom:16px; }
-.co-item { display:flex;justify-content:space-between;font-size:13px;color:#555;margin-bottom:8px; }
-.co-totals { display:flex;flex-direction:column;gap:8px; }
-.co-total-row { display:flex;justify-content:space-between;font-size:13px;color:#555; }
-.co-grand { font-size:18px;font-weight:700;color:#111;padding-top:10px;border-top:1px solid #DDE6F5;margin-top:4px; }
+.co-legal { font-size:11px;color:#aaa;margin-top:10px;line-height:1.6;text-align:center; }
+.checkout-summary-col { background:#F7F9FF;border-radius:10px;padding:24px;border:1px solid #DDE6F5;position:sticky;top:80px; }
+.checkout-summary-col .checkout-heading { font-size:18px;margin-top:0;border-bottom:1px solid #DDE6F5;padding-bottom:14px; }
+.co-items { margin-bottom:16px; }
+.co-item { display:flex;justify-content:space-between;font-size:13px;color:#555;padding:8px 0;border-bottom:1px solid #EEF3FB; }
+.co-item:last-child { border-bottom:none; }
+.co-totals { border-top:1px solid #DDE6F5;padding-top:14px;display:flex;flex-direction:column;gap:8px; }
+.co-total-row { display:flex;justify-content:space-between;font-size:13px;color:#777; }
+.co-grand { font-size:20px;font-weight:700;color:#111;padding-top:10px;border-top:1px solid #DDE6F5;margin-top:4px; }
 /* ── Confirmation ─────────────────────────────────────────── */
 .confirm-box { text-align:center;padding:40px 0; }
 .confirm-icon { width:64px;height:64px;background:#16A34A;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:28px;margin:0 auto 20px; }
@@ -387,7 +396,6 @@ footer { background: #fff; border-top: 1px solid var(--border); padding: 40px 48
     <li><a onclick="showPage('shop')" id="nav-shop">Shop</a></li>
     <li><a onclick="showPage('lab')" id="nav-lab">Lab Reports</a></li>
     <li><a onclick="showPage('faq')" id="nav-faq">FAQ</a></li>
-      <li><a onclick="showPage('track')" id="nav-track">Track Order</a></li>
       <li><a onclick="showPage('account');renderAccountPage()" id="nav-account">My Account</a></li>
   </ul>
   <button class="nav-cart" id="cart-btn" onclick="openCart()">Cart (0)</button>
@@ -1281,40 +1289,49 @@ function renderCheckout() {
   var el = document.getElementById('checkout-content');
   if (!el) return;
   var provinces = ['AB','BC','MB','NB','NL','NS','NT','NU','ON','PE','QC','SK','YT'];
-  var provOpts = '<option value="">Select province</option>' + provinces.map(function(p){ return '<option>'+p+'</option>'; }).join('');
-  var payMethods = ['usdc','btc','etransfer'];
-  var payLabels = {usdc:'USDC',btc:'Bitcoin',etransfer:'e-Transfer'};
-  var paySubLabels = {usdc:'USD Coin (Ethereum)',btc:'BTC on-chain',etransfer:'Canadian banks'};
-  var payHtml = '<div class="pay-methods">' + payMethods.map(function(m,i){
-    return '<div class="pay-opt'+(i===0?' active':'')+'" onclick="selectPay(this,\''+m+'\')" ><div class="pay-opt-name">'+payLabels[m]+'</div><div class="pay-opt-sub">'+paySubLabels[m]+'</div></div>';
-  }).join('') + '</div>';
-  var itemsHtml = getCartItems().map(function(i){ return '<div class="co-item"><span>'+i.name+' '+i.dose+' ×'+i.qty+'</span><span>CA$'+(i.price*i.qty)+'</span></div>'; }).join('');
-  el.innerHTML = '<div class="checkout-layout"><div class="checkout-form-col">'
+  var provOpts = '<option value="">Province</option>' + provinces.map(function(p){ return '<option>'+p+'</option>'; }).join('');
+  var itemsHtml = getCartItems().map(function(i){ return '<div class="co-item"><span>'+i.name+' '+i.dose+' \u00d7'+i.qty+'</span><span>CA$'+(i.price*i.qty)+'</span></div>'; }).join('');
+  el.innerHTML = '<div class="checkout-layout">'
+    // LEFT COL
+    + '<div>'
     + '<h2 class="checkout-heading">Contact & Shipping</h2>'
-    + '<div class="form-row-2"><div class="form-row"><label>Full Name *</label><input id="co-name" placeholder="John Smith"></div>'
-    + '<div class="form-row"><label>Email *</label><input id="co-email" type="email" placeholder="you@example.com"></div></div>'
-    + '<div class="form-row"><label>Phone</label><input id="co-phone" placeholder="+1 (555) 000-0000"></div>'
-    + '<div class="form-row"><label>Street Address *</label><input id="co-address" placeholder="123 Main St"></div>'
-    + '<div class="form-row-3"><div class="form-row"><label>City *</label><input id="co-city" placeholder="Vancouver"></div>'
-    + '<div class="form-row"><label>Province *</label><select id="co-province">'+provOpts+'</select></div>'
-    + '<div class="form-row"><label>Postal Code *</label><input id="co-postal" placeholder="V6B 1A1"></div></div>'
-    + '<h2 class="checkout-heading" style="margin-top:28px">Payment Method</h2>'
-    + payHtml
-    + (_customerName ? '<p style="font-size:13px;color:#16A34A;margin-top:4px">✓ Signed in as '+_customerName+'</p>'
-      : '<div style="margin-top:20px;padding:18px;background:#F7F9FF;border-radius:8px;border:1px solid #DDE6F5">'
-      + '<p style="font-size:13px;font-weight:600;margin-bottom:12px">Create an account to track orders (optional)</p>'
-      + '<div class="form-row"><label>Password (optional)</label><input id="co-password" type="password" placeholder="Leave blank to checkout as guest"></div></div>')
-    + '<button class="co-submit-btn" onclick="submitOrder()">Place Order →</button>'
-    + '<p class="co-legal">For research use only. Not for human consumption. By placing this order you confirm you are 21+.</p>'
-    + '</div><div class="checkout-summary-col">'
+    + '<div class="co-row-2">'
+    + '<div><label class="co-label">Full Name *</label><input class="co-field" id="co-name" placeholder="John Smith"></div>'
+    + '<div><label class="co-label">Email *</label><input class="co-field" id="co-email" type="email" placeholder="you@example.com"></div>'
+    + '</div>'
+    + '<div class="co-row"><label class="co-label">Phone</label><input class="co-field" id="co-phone" placeholder="+1 (555) 000-0000"></div>'
+    + '<div class="co-row"><label class="co-label">Street Address *</label><input class="co-field" id="co-address" placeholder="123 Main Street"></div>'
+    + '<div class="co-row-3">'
+    + '<div><label class="co-label">City *</label><input class="co-field" id="co-city" placeholder="Vancouver"></div>'
+    + '<div><label class="co-label">Province *</label><select class="co-field" id="co-province">'+provOpts+'</select></div>'
+    + '<div><label class="co-label">Postal Code *</label><input class="co-field" id="co-postal" placeholder="V6B 1A1"></div>'
+    + '</div>'
+    + '<h2 class="checkout-heading">Payment Method</h2>'
+    + '<div class="pay-methods">'
+    + '<div class="pay-opt active" onclick="selectPay(this,\'usdc\')"><div class="pay-opt-name">USDC</div><div class="pay-opt-sub">USD Coin</div></div>'
+    + '<div class="pay-opt" onclick="selectPay(this,\'btc\')"><div class="pay-opt-name">Bitcoin</div><div class="pay-opt-sub">BTC on-chain</div></div>'
+    + '<div class="pay-opt" onclick="selectPay(this,\'etransfer\')"><div class="pay-opt-name">e-Transfer</div><div class="pay-opt-sub">Canadian banks</div></div>'
+    + '</div>'
+    + (_customerName
+      ? '<p style="font-size:13px;color:#16A34A;padding:10px 0">\u2713 Signed in as '+_customerName+'</p>'
+      : '<div class="co-account-box"><p>Create an account to track your orders (optional)</p>'
+      + '<div><label class="co-label">Password (leave blank to checkout as guest)</label>'
+      + '<input class="co-field" id="co-password" type="password" placeholder="Min 8 characters"></div></div>')
+    + '<button class="co-submit-btn" onclick="submitOrder()">Place Order &rarr;</button>'
+    + '<p class="co-legal">For research use only. Not for human consumption. Must be 21+ to purchase.</p>'
+    + '</div>'
+    // RIGHT COL — summary
+    + '<div class="checkout-summary-col">'
     + '<h2 class="checkout-heading">Order Summary</h2>'
     + '<div class="co-items">'+itemsHtml+'</div>'
     + '<div class="co-totals">'
     + '<div class="co-total-row"><span>Subtotal</span><span>CA$'+sub+'</span></div>'
-    + '<div class="co-total-row"><span>Shipping</span><span>'+(ship===0?'Free (over CA$500)':'CA$25')+'</span></div>'
+    + '<div class="co-total-row"><span>Shipping</span><span>'+(ship===0?'Free \u2014 over CA$500':'CA$25')+'</span></div>'
     + '<div class="co-total-row co-grand"><span>Total</span><span>CA$'+total+'</span></div>'
-    + '</div><div style="margin-top:16px;padding:14px;background:#fff;border-radius:6px;font-size:12px;color:#888;line-height:1.6">Ships across Canada only. Payment instructions shown after order is placed.</div>'
-    + '</div></div>';
+    + '</div>'
+    + '<p style="font-size:11px;color:#999;margin-top:16px;line-height:1.6">Ships within Canada only. Payment instructions will be shown after placing your order.</p>'
+    + '</div>'
+    + '</div>';
   _payMethod = 'usdc';
 }
 function selectPay(el, method) {
