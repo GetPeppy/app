@@ -818,7 +818,12 @@ function showPage(name) {
   var navEl = document.getElementById('nav-' + name);
   if (navEl) navEl.classList.add('active');
   window.scrollTo(0, 0);
-  if (name === 'shop') renderGrid();
+  if (name === 'shop') {
+    fetch('/api/stock').then(r=>r.json()).then(stock=>{
+      PRODUCTS.forEach(function(p){ if(stock[p.id] !== undefined) p.inStock = stock[p.id].in_stock; });
+      renderGrid();
+    }).catch(function(){ renderGrid(); });
+  }
   if (name === 'lab') renderLabReports();
   if (name === 'product') {}
 }
