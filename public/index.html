@@ -904,7 +904,7 @@ function showPage(name) {
   if (name === 'home') { refreshFeatured(); }
   if (name === 'lab') renderLabReports();
   if (name === 'checkout') renderCheckout();
-  if (name === 'account' && !document.getElementById('acc-login-email')) renderAccountPage();
+  if (name === 'account') renderAccountPage();
   if (name === 'product') {}
 }
 
@@ -1457,7 +1457,13 @@ async function renderAccountPage() {
   var el = document.getElementById('account-content');
   if (!el) return;
   try {
-    var me = await fetch('/api/account/me').then(function(r){return r.json();});
+    // If already logged in, skip the network call
+    var me;
+    if (_customerName) {
+      me = { ok: true, name: _customerName };
+    } else {
+      me = await fetch('/api/account/me').then(function(r){return r.json();});
+    }
     if (!me.ok) {
       el.innerHTML = '<h1 style="font-family:Fraunces,serif;font-size:32px;font-weight:300;margin-bottom:8px">My Account</h1>'
         + '<p style="font-size:14px;color:var(--muted);margin-bottom:36px">Sign in to track your orders, or create a new account.</p>'
