@@ -889,6 +889,12 @@ function showPage(name) {
   var navEl = document.getElementById('nav-' + name);
   if (navEl) navEl.classList.add('active');
   window.scrollTo(0, 0);
+  // Payment section + footer only on home page
+  var isHome = (name === 'home');
+  var paySection = document.querySelector('.payment-section');
+  var footerEl = document.querySelector('footer');
+  if (paySection) paySection.style.display = isHome ? '' : 'none';
+  if (footerEl) footerEl.style.display = isHome ? '' : 'none';
   if (name === 'shop') {
     fetch('/api/stock').then(r=>r.json()).then(stock=>{
       PRODUCTS.forEach(function(p){ if(stock[p.id] !== undefined) p.inStock = stock[p.id].in_stock; });
