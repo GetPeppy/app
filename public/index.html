@@ -1607,6 +1607,7 @@ async function accountLogin() {
       return;
     }
     _customerName = d.name;
+    showPage('account');
     renderAccountPage();
   } catch(err) {
     if (errEl) { errEl.textContent='Connection error. Please try again.'; errEl.style.display='block'; }
