@@ -54,6 +54,18 @@ db.exec(`
     token TEXT PRIMARY KEY,
     created_at INTEGER NOT NULL
   );
+  CREATE TABLE IF NOT EXISTS coa_files (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    product_id TEXT NOT NULL,
+    filename TEXT NOT NULL,
+    label TEXT NOT NULL,
+    lab TEXT NOT NULL,
+    date TEXT NOT NULL,
+    purity TEXT,
+    is_current INTEGER NOT NULL DEFAULT 0,
+    data BLOB NOT NULL,
+    uploaded_at TEXT NOT NULL DEFAULT (datetime('now'))
+  );
   INSERT OR IGNORE INTO settings VALUES ('usdc_address','');
   INSERT OR IGNORE INTO settings VALUES ('btc_address','');
   INSERT OR IGNORE INTO settings VALUES ('etransfer_email','');
@@ -226,6 +238,7 @@ select.status-select{width:auto;padding:4px 8px;font-size:12px}
     <a href="/admin" class="${page==='orders'?'active':''}">Orders</a>
     <a href="/admin/customers" class="${page==='customers'?'active':''}">Customers</a>
     <a href="/admin/inventory" class="${page==='inventory'?'active':''}">Inventory</a>
+    <a href="/admin/coas" class="${page==='coas'?'active':''}">Lab Reports</a>
     <a href="/admin/settings" class="${page==='settings'?'active':''}">Settings</a>
     <a href="/admin/logout" style="margin-left:auto">Log out</a>
   </div>
@@ -317,6 +330,19 @@ const server = http.createServer(async (req, res) => {
     const out = {};
     for (const r of rows) out[r.key] = r.value;
     return json(res, out);
+  }
+
+  // ── Public: serve COA PDF from DB ───────────────────────────────────────
+  const coaMatch = pathname.match(/^\/coa\/([^/]+)\/(.+\.pdf)$/i);
+  if (coaMatch) {
+    const productId = coaMatch[1];
+    const filename  = coaMatch[2];
+    const row = db.prepare(`SELECT data FROM coa_files WHERE product_id=? AND filename=?`).get(productId, filename);
+    if (row) {
+      res.writeHead(200, { 'Content-Type': 'application/pdf', 'Content-Disposition': `inline; filename="${filename}"` });
+      return res.end(Buffer.from(row.data));
+    }
+    // Fall through to static file serving (for files in public/coa/)
   }
 
   // ── Public: stock check ──────────────────────────────────────────────────
@@ -465,6 +491,75 @@ const server = http.createServer(async (req, res) => {
       const revenue = db.prepare(`SELECT COALESCE(SUM(subtotal),0) as s FROM orders WHERE status!='cancelled'`).get().s;
       const custs   = db.prepare(`SELECT COUNT(*) as c FROM customers`).get().c;
       return json(res, { total, pending, revenue, customers: custs });
+    }
+
+    // COAs — list for a product
+    if (pathname.match(/^\/api\/admin\/coas\/[^/]+$/) && method === 'GET') {
+      const productId = pathname.split('/')[4];
+      return json(res, db.prepare(`SELECT id,product_id,filename,label,lab,date,purity,is_current,uploaded_at FROM coa_files WHERE product_id=? ORDER BY is_current DESC, uploaded_at DESC`).all(productId));
+    }
+    // COAs — upload (multipart/form-data parsed manually)
+    if (pathname === '/api/admin/coas/upload' && method === 'POST') {
+      const chunks = [];
+      await new Promise((resolve, reject) => {
+        req.on('data', c => chunks.push(c));
+        req.on('end', resolve);
+        req.on('error', reject);
+      });
+      const rawBody = Buffer.concat(chunks);
+      const ct = req.headers['content-type'] || '';
+      const boundaryMatch = ct.match(/boundary=(.+)/);
+      if (!boundaryMatch) return json(res, { error: 'No boundary' }, 400);
+      const boundary = Buffer.from('--' + boundaryMatch[1].trim());
+      // Parse multipart
+      const parts = [];
+      let start = 0;
+      while (true) {
+        const idx = rawBody.indexOf(boundary, start);
+        if (idx === -1) break;
+        const partStart = idx + boundary.length + 2; // skip \r\n
+        const nextIdx = rawBody.indexOf(boundary, partStart);
+        if (nextIdx === -1) break;
+        const partEnd = nextIdx - 2; // skip \r\n before next boundary
+        const part = rawBody.slice(partStart, partEnd);
+        // Split headers and body
+        const headerEnd = part.indexOf(Buffer.from('\r\n\r\n'));
+        if (headerEnd === -1) { start = nextIdx; continue; }
+        const headers = part.slice(0, headerEnd).toString();
+        const partBody = part.slice(headerEnd + 4);
+        const nameMatch = headers.match(/name="([^"]+)"/);
+        const filenameMatch = headers.match(/filename="([^"]+)"/);
+        parts.push({ name: nameMatch?.[1], filename: filenameMatch?.[1], body: partBody, isFile: !!filenameMatch });
+        start = nextIdx;
+      }
+      const fields = {};
+      let fileData = null, fileName = null;
+      for (const p of parts) {
+        if (p.isFile) { fileData = p.body; fileName = p.filename; }
+        else fields[p.name] = p.body.toString().trim();
+      }
+      if (!fileData || !fileName) return json(res, { error: 'No file' }, 400);
+      const productId = fields.product_id;
+      if (!productId) return json(res, { error: 'No product_id' }, 400);
+      // If marked current, unset others
+      if (fields.is_current === '1') db.prepare(`UPDATE coa_files SET is_current=0 WHERE product_id=?`).run(productId);
+      db.prepare(`INSERT INTO coa_files(product_id,filename,label,lab,date,purity,is_current,data) VALUES(?,?,?,?,?,?,?,?)`)
+        .run(productId, fileName, fields.label||fileName, fields.lab||'', fields.date||'', fields.purity||'', fields.is_current==='1'?1:0, fileData);
+      return json(res, { ok: true });
+    }
+    // COAs — set current
+    if (pathname.match(/^\/api\/admin\/coas\/\d+\/current$/) && method === 'PATCH') {
+      const id = pathname.split('/')[4];
+      const row = db.prepare(`SELECT product_id FROM coa_files WHERE id=?`).get(id);
+      if (row) db.prepare(`UPDATE coa_files SET is_current=0 WHERE product_id=?`).run(row.product_id);
+      db.prepare(`UPDATE coa_files SET is_current=1 WHERE id=?`).run(id);
+      return json(res, { ok: true });
+    }
+    // COAs — delete
+    if (pathname.match(/^\/api\/admin\/coas\/\d+$/) && method === 'DELETE') {
+      const id = pathname.split('/')[4];
+      db.prepare(`DELETE FROM coa_files WHERE id=?`).run(id);
+      return json(res, { ok: true });
     }
 
     return json(res, { error:'Not found' }, 404);
@@ -748,6 +843,122 @@ async function save() {
   if (r.ok) toast('Settings saved'); else toast('Error',true);
 }
 load();
+</script></body></html>`);
+    return;
+  }
+
+  if (pathname === '/admin/coas') {
+    const PRODUCTS_LIST = [
+      { id:'retatrutide-10mg', name:'Retatrutide 10mg' },
+      { id:'retatrutide-20mg', name:'Retatrutide 20mg' },
+      { id:'mots-c-10mg',      name:'MOTS-c 10mg' },
+      { id:'mots-c-40mg',      name:'MOTS-c 40mg' },
+      { id:'klow-80mg',        name:'KLOW 80mg' },
+      { id:'glow-70mg',        name:'GLOW 70mg' },
+      { id:'tesamorelin-10mg', name:'Tesamorelin 10mg' },
+      { id:'cjc-ipamorelin-10mg', name:'CJC-1295 / Ipamorelin 10mg' },
+      { id:'nad-500mg',        name:'NAD+ 500mg' },
+      { id:'nad-1000mg',       name:'NAD+ 1000mg' },
+      { id:'5amino1mq-50mg',   name:'5-Amino-1MQ 50mg' },
+      { id:'semax-10mg',       name:'Semax 10mg' },
+      { id:'selank-10mg',      name:'Selank 10mg' },
+    ];
+    res.end(adminHTML('coas') + `
+<main>
+  <div class="card" style="max-width:900px;margin-bottom:32px">
+    <div class="card-header"><h2>Upload New COA</h2></div>
+    <div class="card-body">
+      <div class="grid-2">
+        <div class="form-row">
+          <label>Product</label>
+          <select id="up-product">
+            ${PRODUCTS_LIST.map(p=>`<option value="${p.id}">${p.name}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-row"><label>Lab Name</label><input id="up-lab" placeholder="e.g. Janoshik"></div>
+        <div class="form-row"><label>Date</label><input id="up-date" type="date"></div>
+        <div class="form-row"><label>Purity %</label><input id="up-purity" placeholder="e.g. 99.64%"></div>
+        <div class="form-row"><label>Label / Description</label><input id="up-label" placeholder="e.g. Purity Analysis · Lot 2026-07"></div>
+        <div class="form-row" style="display:flex;align-items:center;gap:10px;padding-top:24px">
+          <input type="checkbox" id="up-current" style="width:auto">
+          <label style="margin:0">Set as current batch</label>
+        </div>
+      </div>
+      <div class="form-row">
+        <label>PDF File</label>
+        <input type="file" id="up-file" accept=".pdf" style="padding:8px 0">
+      </div>
+      <button class="btn btn-blue" onclick="uploadCOA()">Upload COA</button>
+    </div>
+  </div>
+
+  <div class="card" style="max-width:900px">
+    <div class="card-header">
+      <h2>COAs by Product</h2>
+      <select id="prod-filter" onchange="loadCOAs()" style="width:auto;padding:6px 12px;font-size:13px">
+        ${PRODUCTS_LIST.map(p=>`<option value="${p.id}">${p.name}</option>`).join('')}
+      </select>
+    </div>
+    <div id="coa-table"><div class="empty">Select a product above</div></div>
+  </div>
+</main>
+<script>
+async function uploadCOA() {
+  const file = document.getElementById('up-file').files[0];
+  if (!file) { toast('Select a PDF first', true); return; }
+  const fd = new FormData();
+  fd.append('product_id', document.getElementById('up-product').value);
+  fd.append('lab',        document.getElementById('up-lab').value);
+  fd.append('date',       document.getElementById('up-date').value);
+  fd.append('purity',     document.getElementById('up-purity').value);
+  fd.append('label',      document.getElementById('up-label').value || file.name);
+  fd.append('is_current', document.getElementById('up-current').checked ? '1' : '0');
+  fd.append('file',       file, file.name);
+  const r = await fetch('/api/admin/coas/upload', { method:'POST', body:fd });
+  const data = await r.json();
+  if (data.ok) { toast('COA uploaded!'); loadCOAs(); document.getElementById('up-file').value=''; }
+  else toast('Error: '+(data.error||'unknown'), true);
+}
+
+async function loadCOAs() {
+  const pid = document.getElementById('prod-filter').value;
+  const coas = await api('/api/admin/coas/'+pid);
+  if (!coas.length) {
+    document.getElementById('coa-table').innerHTML = '<div class="empty">No COAs uploaded for this product yet</div>';
+    return;
+  }
+  document.getElementById('coa-table').innerHTML = \`<table>
+    <thead><tr><th>Label</th><th>Lab</th><th>Date</th><th>Purity</th><th>Status</th><th>Uploaded</th><th></th></tr></thead>
+    <tbody>\${coas.map(c=>\`<tr>
+      <td style="font-weight:500">\${c.label}</td>
+      <td>\${c.lab||'—'}</td>
+      <td>\${c.date||'—'}</td>
+      <td style="color:#16A34A;font-weight:600">\${c.purity||'—'}</td>
+      <td>\${c.is_current ? '<span class="badge badge-paid">Current</span>' : '<span style="color:#888;font-size:12px">—</span>'}</td>
+      <td style="color:#888;font-size:12px">\${(c.uploaded_at||'').slice(0,10)}</td>
+      <td style="display:flex;gap:6px">
+        <a class="btn btn-ghost btn-sm" href="/coa/\${c.product_id}/\${c.filename}" target="_blank">View PDF</a>
+        \${!c.is_current ? \`<button class="btn btn-blue btn-sm" onclick="setCurrent(\${c.id})">Set Current</button>\` : ''}
+        <button class="btn btn-danger btn-sm" onclick="deleteCOA(\${c.id})">Delete</button>
+      </td>
+    </tr>\`).join('')}
+    </tbody></table>\`;
+}
+
+async function setCurrent(id) {
+  const r = await api('/api/admin/coas/'+id+'/current','PATCH');
+  if (r.ok) { toast('Set as current batch'); loadCOAs(); }
+  else toast('Error',true);
+}
+
+async function deleteCOA(id) {
+  if (!confirm('Delete this COA?')) return;
+  const r = await api('/api/admin/coas/'+id,'DELETE');
+  if (r.ok) { toast('Deleted'); loadCOAs(); }
+  else toast('Error',true);
+}
+
+loadCOAs();
 </script></body></html>`);
     return;
   }
