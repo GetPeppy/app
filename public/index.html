@@ -836,7 +836,7 @@ function refreshFeatured() {
       if (!p) return;
       var btn = document.getElementById('fc-btn-' + idx);
       if (!btn) return;
-      var inStock = stock[p.id] ? stock[p.id].in_stock : p.inStock;
+      var inStock = (stock[p.id] !== undefined) ? !!stock[p.id].in_stock : false;
       if (inStock) {
         btn.className = 'featured-card-btn';
         btn.textContent = 'Add to Cart';
