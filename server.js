@@ -95,7 +95,7 @@ for (const p of PRODUCTS) upsert.run(p.id, p.name, p.dose, p.price);
 db.prepare(`UPDATE inventory SET in_stock=0 WHERE quantity=0`).run();
 
 // Seed coa_files table from static PDFs on disk (runs once — skips existing)
-(function seedCOAs() {
+try { (function seedCOAs() {
   const coaDir = path.join(__dirname, 'public', 'coa');
   if (!fs.existsSync(coaDir)) return;
   const check = db.prepare(`SELECT COUNT(*) as c FROM coa_files WHERE product_id=? AND filename=?`);
@@ -142,7 +142,7 @@ db.prepare(`UPDATE inventory SET in_stock=0 WHERE quantity=0`).run();
       try { insert.run(productId, filename, label, lab, date, '', isCurrent, data); } catch(e) {}
     });
   }
-})();
+})(); } catch(e) { console.error('COA seed error:', e.message); }
 
 // Notify me table
 db.exec(`CREATE TABLE IF NOT EXISTS notify_requests (
