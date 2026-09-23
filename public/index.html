@@ -1453,11 +1453,11 @@ async function lookupOrder() {
       + '</div>';
   } catch(e) { el.innerHTML='<p style="color:#EF4444">Error: '+e.message+'</p>'; }
 }
+var _accountPageState = null; // 'logged-in', 'logged-out'
 async function renderAccountPage() {
   var el = document.getElementById('account-content');
   if (!el) return;
   try {
-    // If already logged in, skip the network call
     var me;
     if (_customerName) {
       me = { ok: true, name: _customerName };
@@ -1465,6 +1465,8 @@ async function renderAccountPage() {
       me = await fetch('/api/account/me').then(function(r){return r.json();});
     }
     if (!me.ok) {
+      // Only re-render the not-logged-in form if not already showing
+      if (_accountPageState === 'logged-out') return;
       el.innerHTML = '<h1 style="font-family:Fraunces,serif;font-size:32px;font-weight:300;margin-bottom:8px">My Account</h1>'
         + '<p style="font-size:14px;color:var(--muted);margin-bottom:36px">Sign in to track your orders, or create a new account.</p>'
         + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;max-width:680px">'
