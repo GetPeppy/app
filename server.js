@@ -91,6 +91,67 @@ const PRODUCTS = [
 const upsert = db.prepare(`INSERT OR IGNORE INTO inventory(id,name,dose,price,quantity,in_stock) VALUES(?,?,?,?,0,1)`);
 for (const p of PRODUCTS) upsert.run(p.id, p.name, p.dose, p.price);
 
+// Fix: set in_stock=0 for any product where quantity=0
+db.prepare(`UPDATE inventory SET in_stock=0 WHERE quantity=0`).run();
+
+// Seed coa_files table from static PDFs on disk (runs once — skips existing)
+(function seedCOAs() {
+  const coaDir = path.join(__dirname, 'public', 'coa');
+  if (!fs.existsSync(coaDir)) return;
+  const check = db.prepare(`SELECT COUNT(*) as c FROM coa_files WHERE product_id=? AND filename=?`);
+  const insert = db.prepare(`INSERT INTO coa_files(product_id,filename,label,lab,date,purity,is_current,data) VALUES(?,?,?,?,?,?,?,?)`);
+  // Map folder names to product IDs
+  const folderMap = {
+    '5amino-50':'5amino1mq-50mg', 'cjc-ipa-10':'cjc-ipamorelin-10mg',
+    'glow-70':'glow-70mg', 'klow-80':'klow-80mg',
+    'mots-c-10':'mots-c-10mg', 'mots-c-40':'mots-c-40mg',
+    'nad-1000':'nad-1000mg', 'nad-500':'nad-500mg',
+    'reta-10':'retatrutide-10mg', 'reta-20':'retatrutide-20mg',
+    'selank-10':'selank-10mg', 'semax-10':'semax-10mg', 'tesa-10':'tesamorelin-10mg',
+  };
+  for (const folder of fs.readdirSync(coaDir)) {
+    const productId = folderMap[folder];
+    if (!productId) continue;
+    const folderPath = path.join(coaDir, folder);
+    if (!fs.statSync(folderPath).isDirectory()) continue;
+    const files = fs.readdirSync(folderPath).filter(f => f.endsWith('.pdf')).sort();
+    files.forEach((filename, idx) => {
+      if (check.get(productId, filename).c > 0) return; // already seeded
+      const data = fs.readFileSync(path.join(folderPath, filename));
+      // Parse metadata from filename
+      const parts = filename.replace('.pdf','').split('_');
+      // Extract date (last segment like 2026-07-31)
+      const dateMatch = filename.match(/(\d{4}-\d{2}-\d{2})/);
+      const date = dateMatch ? dateMatch[1] : '';
+      // Detect lab
+      const lab = filename.includes('Janoshik') ? 'Janoshik'
+        : filename.includes('Freedom') ? 'Freedom Diagnostics'
+        : filename.includes('Testides') ? 'Testides'
+        : filename.includes('Uzorak') ? 'Uzorak'
+        : filename.includes('ILS') ? 'ILS Laboratories'
+        : filename.includes('Peptidologix') ? 'Peptidologix'
+        : filename.includes('Reviva') ? 'Reviva'
+        : '';
+      // Detect type
+      const label = filename.includes('Endotoxin') ? 'Endotoxin Test'
+        : filename.includes('Sterility') ? 'Sterility Test'
+        : filename.includes('MassPurity') ? 'Mass & Purity Analysis'
+        : 'Purity Analysis';
+      // Most recent file per folder = current
+      const isCurrent = idx === files.length - 1 ? 1 : 0;
+      try { insert.run(productId, filename, label, lab, date, '', isCurrent, data); } catch(e) {}
+    });
+  }
+})();
+
+// Notify me table
+db.exec(`CREATE TABLE IF NOT EXISTS notify_requests (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  product_id TEXT NOT NULL,
+  email TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);`);
+
 // ── Sessions ──────────────────────────────────────────────────────────────────
 const SESSION_TTL = 8 * 60 * 60 * 1000; // 8 hours
 function createSession() {
@@ -343,6 +404,14 @@ const server = http.createServer(async (req, res) => {
       return res.end(Buffer.from(row.data));
     }
     // Fall through to static file serving (for files in public/coa/)
+  }
+
+  // ── Public: notify me ───────────────────────────────────────────────────
+  if (pathname === '/api/notify' && method === 'POST') {
+    const data = await body(req);
+    if (!data.email || !data.product_id) return json(res, { ok:false, error:'Missing fields' }, 400);
+    db.prepare(`INSERT INTO notify_requests(product_id,email) VALUES(?,?)`).run(data.product_id, data.email);
+    return json(res, { ok:true });
   }
 
   // ── Public: stock check ──────────────────────────────────────────────────
