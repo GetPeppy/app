@@ -1502,86 +1502,65 @@ async function renderAccountPage() {
   } catch(e) {}
 }
 async function renderDashboard(el, name) {
-  var orders = await fetch('/api/account/orders').then(function(r){return r.json();});
-    var STATUS_COLOR={submitted:'#3B6FD4',received:'#D97706',payment_confirmed:'#16A34A',shipped:'#7C3AED',delivered:'#16A34A',cancelled:'#EF4444'};
-    var STATUS_LABEL={submitted:'Submitted',received:'Received',payment_confirmed:'Payment Confirmed',shipped:'Shipped',delivered:'Delivered',cancelled:'Cancelled'};
-    var ordersHtml = orders.length===0 ? '<p style="color:#888;padding:24px">No orders yet.</p>'
-      : '<table style="width:100%;border-collapse:collapse"><thead><tr style="background:#F9F9F9"><th style="padding:12px 16px;text-align:left;font-size:12px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:.05em">Ref</th><th style="padding:12px 16px;text-align:left;font-size:12px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:.05em">Date</th><th style="padding:12px 16px;font-size:12px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:.05em">Total</th><th style="padding:12px 16px;font-size:12px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:.05em">Status</th><th></th></tr></thead><tbody>'
-      + orders.map(function(o){
-        var tl=o.total||o.subtotal||0;
-        var items=[]; try{items=JSON.parse(o.items||'[]');}catch(e2){}
-        var itemList=items.map(function(it){return it.name+' '+it.dose+' x'+(it.qty||1);}).join(', ');
-        var sc=STATUS_COLOR[o.status]||'#888';
-        var sl=STATUS_LABEL[o.status]||o.status;
-        return '<div style="border-bottom:1px solid #F0F0F0;padding:20px 24px">'
-          +'<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">'
-          +'<div>'
-          +'<div style="font-family:monospace;font-size:13px;color:#555;margin-bottom:4px">'+o.order_ref+'</div>'
-          +'<div style="font-size:13px;color:#888">'+o.created_at.slice(0,10)+'</div>'
-          +'</div>'
-          +'<div style="text-align:right">'
-          +'<div style="font-size:18px;font-weight:700;color:#111;margin-bottom:6px">CA$'+Number(tl).toFixed(0)+'</div>'
-          +'<span style="display:inline-block;padding:3px 10px;border-radius:100px;font-size:11px;font-weight:700;color:#fff;background:'+sc+'">'+sl+'</span>'
-          +'</div></div>'
-          +'<div style="font-size:13px;color:#555;margin-bottom:8px">'+itemList+'</div>'
-          +(o.tracking_number?'<div style="font-size:12px;background:#EFF6FF;color:#1D4ED8;padding:8px 12px;border-radius:6px;display:inline-block">Tracking: <strong>'+o.tracking_number+'</strong></div>':'')
-          +'</div>';
-      }).join("")
-      + '</tbody></table>';
-    el.innerHTML = '<h1 style="font-family:Fraunces,serif;font-size:32px;font-weight:300;margin-bottom:8px">My Account</h1>'
-      + '<p style="font-size:14px;color:var(--muted);margin-bottom:36px">Sign in to track your orders or create an account.</p>'
-      + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;max-width:680px">'
-      + '<div style="background:#fff;border:1px solid #E8E8E8;border-radius:10px;padding:32px">'
-      + '<p style="font-size:11px;font-weight:700;letter-spacing:.10em;text-transform:uppercase;color:var(--accent);margin-bottom:8px">Existing Customer</p>'
-      + '<h2 style="font-family:Fraunces,serif;font-size:22px;font-weight:300;margin-bottom:24px;color:#111">Sign In</h2>'
-      + '<div style="margin-bottom:14px"><label style="display:block;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#666;margin-bottom:6px">Email</label>'
-      + '<input id="acc-login-email" type="email" placeholder="you@example.com" style="width:100%;padding:11px 14px;border:1px solid #E0E0E0;border-radius:6px;font-size:14px;font-family:Inter,sans-serif;outline:none;box-sizing:border-box"></div>'
-      + '<div style="margin-bottom:22px"><label style="display:block;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#666;margin-bottom:6px">Password</label>'
-      + '<input id="acc-login-pw" type="password" placeholder="••••••••" style="width:100%;padding:11px 14px;border:1px solid #E0E0E0;border-radius:6px;font-size:14px;font-family:Inter,sans-serif;outline:none;box-sizing:border-box"></div>'
-      + '<button onclick="accountLogin()" style="width:100%;padding:13px;background:var(--accent);color:#fff;border:none;border-radius:7px;font-size:14px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif;transition:opacity .15s">Sign In</button>'
-      + '</div>'
-      + '<div style="background:#F7F9FF;border:1px solid #DDE6F5;border-radius:10px;padding:32px">'
-      + '<p style="font-size:11px;font-weight:700;letter-spacing:.10em;text-transform:uppercase;color:var(--accent);margin-bottom:8px">New Customer</p>'
-      + '<h2 style="font-family:Fraunces,serif;font-size:22px;font-weight:300;margin-bottom:24px;color:#111">Create Account</h2>'
-      + '<div style="margin-bottom:14px"><label style="display:block;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#666;margin-bottom:6px">Full Name</label>'
-      + '<input id="acc-reg-name" placeholder="John Smith" style="width:100%;padding:11px 14px;border:1px solid #E0E0E0;border-radius:6px;font-size:14px;font-family:Inter,sans-serif;outline:none;box-sizing:border-box"></div>'
-      + '<div style="margin-bottom:14px"><label style="display:block;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#666;margin-bottom:6px">Email</label>'
-      + '<input id="acc-reg-email" type="email" placeholder="you@example.com" style="width:100%;padding:11px 14px;border:1px solid #E0E0E0;border-radius:6px;font-size:14px;font-family:Inter,sans-serif;outline:none;box-sizing:border-box"></div>'
-      + '<div style="margin-bottom:22px"><label style="display:block;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#666;margin-bottom:6px">Password</label>'
-      + '<input id="acc-reg-pw" type="password" placeholder="Min 8 characters" style="width:100%;padding:11px 14px;border:1px solid #E0E0E0;border-radius:6px;font-size:14px;font-family:Inter,sans-serif;outline:none;box-sizing:border-box"></div>'
-      + '<div id="reg-error" style="display:none;color:#EF4444;font-size:13px;margin-bottom:12px;padding:10px;background:#FEF2F2;border-radius:6px"></div>' + '<button onclick="accountRegister()" style="width:100%;padding:13px;background:#111;color:#fff;border:none;border-radius:7px;font-size:14px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">Create Account</button>'
-      + '</div></div>';
-      return;
-    _customerName = me.name;
-    _accountPageState = 'logged-in';
+  el.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:32px">'
+    + '<div><p style="font-size:12px;color:#888;margin-bottom:4px;text-transform:uppercase;letter-spacing:.06em">Welcome back</p>'
+    + '<h1 style="font-family:Fraunces,serif;font-size:32px;font-weight:300;color:#111">' + name + '</h1></div>'
+    + '<button onclick="accountLogout()" style="background:none;border:1px solid #E8E8E8;color:#555;padding:9px 18px;border-radius:6px;font-size:13px;cursor:pointer;font-family:Inter,sans-serif">Sign Out</button>'
+    + '</div>'
+    + '<div id="acct-orders-section" style="background:#fff;border:1px solid #E8E8E8;border-radius:10px;overflow:hidden;margin-bottom:24px">'
+    + '<div style="padding:18px 24px;border-bottom:1px solid #E8E8E8;background:#FAFAFA"><h2 style="font-size:16px;font-weight:700">Your Orders</h2></div>'
+    + '<div id="acct-orders-list"><div style="padding:24px;color:#888;font-size:14px">Loading orders...</div></div>'
+    + '</div>'
+    + '<div style="background:#fff;border:1px solid #E8E8E8;border-radius:10px;overflow:hidden">'
+    + '<div style="padding:18px 24px;border-bottom:1px solid #E8E8E8;background:#FAFAFA"><h2 style="font-size:16px;font-weight:700">Change Password</h2></div>'
+    + '<div style="padding:24px;max-width:420px">'
+    + '<div style="margin-bottom:14px"><label style="display:block;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#666;margin-bottom:6px">Current Password</label>'
+    + '<input id="cp-current" type="password" style="width:100%;padding:11px 14px;border:1px solid #E0E0E0;border-radius:6px;font-size:14px;font-family:Inter,sans-serif;outline:none;box-sizing:border-box"></div>'
+    + '<div style="margin-bottom:14px"><label style="display:block;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#666;margin-bottom:6px">New Password</label>'
+    + '<input id="cp-new" type="password" style="width:100%;padding:11px 14px;border:1px solid #E0E0E0;border-radius:6px;font-size:14px;font-family:Inter,sans-serif;outline:none;box-sizing:border-box"></div>'
+    + '<div style="margin-bottom:20px"><label style="display:block;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#666;margin-bottom:6px">Confirm New Password</label>'
+    + '<input id="cp-confirm" type="password" style="width:100%;padding:11px 14px;border:1px solid #E0E0E0;border-radius:6px;font-size:14px;font-family:Inter,sans-serif;outline:none;box-sizing:border-box"></div>'
+    + '<div id="cp-error" style="display:none;color:#EF4444;font-size:13px;margin-bottom:12px;padding:10px;background:#FEF2F2;border-radius:6px"></div>'
+    + '<button onclick="changePassword()" style="padding:12px 28px;background:var(--accent);color:#fff;border:none;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Update Password</button>'
+    + '</div></div>';
+
+  // Load orders async
+  try {
     var orders = await fetch('/api/account/orders').then(function(r){return r.json();});
-    var STATUS_LABEL={submitted:'Submitted',received:'Received',payment_confirmed:'Payment Confirmed',shipped:'Shipped',delivered:'Delivered',cancelled:'Cancelled'};
-    var ordersHtml = orders.length===0 ? '<p style="color:#888;padding:24px">No orders yet.</p>'
-      : '<table style="width:100%;border-collapse:collapse"><thead><tr style="background:#F9F9F9"><th style="padding:12px 16px;text-align:left;font-size:12px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:.05em">Ref</th><th style="padding:12px 16px;text-align:left;font-size:12px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:.05em">Date</th><th style="padding:12px 16px;font-size:12px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:.05em">Total</th><th style="padding:12px 16px;font-size:12px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:.05em">Status</th><th></th></tr></thead><tbody>'
-      + orders.map(function(o){ var tl=o.total||o.subtotal; return "<tr style=\"border-top:1px solid #F0F0F0\"><td style=\"padding:14px 16px\"><span style=\"font-family:monospace;font-size:13px\">"+o.order_ref+"</span></td><td style=\"padding:14px 16px;font-size:13px;color:#888\">"+o.created_at.slice(0,10)+"</td><td style=\"padding:14px 16px;font-size:14px;font-weight:600\">CA$"+tl+"</td><td style=\"padding:14px 16px\"><span class=\"badge badge-"+o.status+"\">"+( STATUS_LABEL[o.status]||o.status)+"</span></td><td style=\"padding:14px 16px\"><button class=\"acct-track-btn\" data-ref=\""+o.order_ref+"\" style=\"background:none;border:1px solid #3B6FD4;color:#3B6FD4;padding:5px 12px;border-radius:4px;font-size:12px;font-weight:600;cursor:pointer\">Track</button></td></tr>"; }).join("")
-      + '</tbody></table>';
-    el.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:32px">'
-      + '<div><p style="font-size:12px;color:#888;margin-bottom:4px">Signed in as</p><h1 style="font-family:Fraunces,serif;font-size:28px;font-weight:300">'+me.name+'</h1></div>'
-      + '<button onclick="accountLogout()" style="background:none;border:1px solid #E8E8E8;color:#555;padding:8px 16px;border-radius:6px;font-size:13px;cursor:pointer;font-family:Inter,sans-serif">Sign Out</button></div>'
-      + '<div style="background:#fff;border:1px solid #E8E8E8;border-radius:10px;overflow:hidden">'
-      + '<div style="padding:16px 20px;border-bottom:1px solid #E8E8E8"><h2 style="font-size:15px;font-weight:700">My Orders</h2></div>'
-      + ordersHtml + '</div>';
-      + '<div style="background:#fff;border:1px solid #E8E8E8;border-radius:10px;overflow:hidden;margin-top:24px">'
-      + '<div style="padding:16px 20px;border-bottom:1px solid #E8E8E8"><h2 style="font-size:15px;font-weight:700">Change Password</h2></div>'
-      + '<div style="padding:24px">'
-      + '<div style="margin-bottom:14px"><label style="display:block;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#666;margin-bottom:6px">Current Password</label>'
-      + '<input id="cp-current" type="password" style="width:100%;max-width:400px;padding:11px 14px;border:1px solid #E0E0E0;border-radius:6px;font-size:14px;font-family:Inter,sans-serif;outline:none;box-sizing:border-box"></div>'
-      + '<div style="margin-bottom:14px"><label style="display:block;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#666;margin-bottom:6px">New Password</label>'
-      + '<input id="cp-new" type="password" style="width:100%;max-width:400px;padding:11px 14px;border:1px solid #E0E0E0;border-radius:6px;font-size:14px;font-family:Inter,sans-serif;outline:none;box-sizing:border-box"></div>'
-      + '<div style="margin-bottom:20px"><label style="display:block;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#666;margin-bottom:6px">Confirm New Password</label>'
-      + '<input id="cp-confirm" type="password" style="width:100%;max-width:400px;padding:11px 14px;border:1px solid #E0E0E0;border-radius:6px;font-size:14px;font-family:Inter,sans-serif;outline:none;box-sizing:border-box"></div>'
-      + '<div id="cp-error" style="display:none;color:#EF4444;font-size:13px;margin-bottom:12px"></div>'
-      + '<button onclick="changePassword()" style="padding:12px 28px;background:var(--accent);color:#fff;border:none;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Update Password</button>'
-      + '</div></div>'
-  // Wire track buttons
-  document.querySelectorAll('.acct-track-btn').forEach(function(b){ b.onclick = function(){ showPage('track'); document.getElementById('track-ref').value=this.dataset.ref; lookupOrder(); }; });
-  
-} 
+    var STATUS_COLOR = {submitted:'#3B6FD4',received:'#D97706',payment_confirmed:'#16A34A',shipped:'#7C3AED',delivered:'#16A34A',cancelled:'#EF4444'};
+    var STATUS_LABEL = {submitted:'Submitted',received:'Received',payment_confirmed:'Payment Confirmed',shipped:'Shipped',delivered:'Delivered',cancelled:'Cancelled'};
+    var ordersEl = document.getElementById('acct-orders-list');
+    if (!ordersEl) return;
+    if (!orders || !orders.length) {
+      ordersEl.innerHTML = '<div style="padding:24px;color:#888;font-size:14px">No orders yet.</div>';
+      return;
+    }
+    ordersEl.innerHTML = orders.map(function(o) {
+      var tl = o.total || o.subtotal || 0;
+      var items = [];
+      try { items = JSON.parse(o.items || '[]'); } catch(e2) {}
+      var itemList = items.map(function(it){ return it.name + ' ' + it.dose + ' x' + (it.qty||1); }).join(', ');
+      var sc = STATUS_COLOR[o.status] || '#888';
+      var sl = STATUS_LABEL[o.status] || o.status;
+      return '<div style="border-bottom:1px solid #F0F0F0;padding:20px 24px">'
+        + '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">'
+        + '<div>'
+        + '<div style="font-family:monospace;font-size:13px;color:#555;margin-bottom:4px">' + o.order_ref + '</div>'
+        + '<div style="font-size:12px;color:#aaa">' + (o.created_at||'').slice(0,10) + '</div>'
+        + '</div>'
+        + '<div style="text-align:right">'
+        + '<div style="font-size:18px;font-weight:700;color:#111;margin-bottom:6px">CA$' + Number(tl).toFixed(0) + '</div>'
+        + '<span style="display:inline-block;padding:3px 10px;border-radius:100px;font-size:11px;font-weight:700;color:#fff;background:' + sc + '">' + sl + '</span>'
+        + '</div></div>'
+        + (itemList ? '<div style="font-size:13px;color:#555;margin-bottom:8px">' + itemList + '</div>' : '')
+        + (o.tracking_number ? '<div style="font-size:12px;background:#EFF6FF;color:#1D4ED8;padding:8px 12px;border-radius:6px;display:inline-block">Tracking: <strong>' + o.tracking_number + '</strong></div>' : '')
+        + '</div>';
+    }).join('');
+  } catch(err) {
+    var ordersEl2 = document.getElementById('acct-orders-list');
+    if (ordersEl2) ordersEl2.innerHTML = '<div style="padding:24px;color:#888">Could not load orders.</div>';
+  }
+}
 async function accountLogout() {
   await fetch('/api/account/logout',{method:'POST'});
   _customerName = null;
