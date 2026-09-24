@@ -514,7 +514,9 @@ const server = http.createServer(async (req, res) => {
   if (pathname === '/api/account/login' && method === 'POST') {
     const data = await body(req);
     const acct = db.prepare(`SELECT * FROM customer_accounts WHERE email=? AND password_hash=?`).get(data.email||'', hashPassword(data.password||''));
-    if (!acct) return json(res, { ok:false, error:'Invalid email or password' }, 401);
+    const emailExists = db.prepare('SELECT id FROM customer_accounts WHERE email=?').get(data.email||'');
+    if (!emailExists) return json(res, { ok:false, error:'No account found with that email address.' }, 401);
+    if (!acct) return json(res, { ok:false, error:'Incorrect password. Please try again.' }, 401);
     const token = createCustomerSession(acct.id);
     res.writeHead(200, { 'Content-Type':'application/json', 'Set-Cookie':`peppy_customer=${token}; Path=/; HttpOnly; SameSite=Strict; Max-Age=2592000` });
     return res.end(JSON.stringify({ ok:true, name: acct.name }));
