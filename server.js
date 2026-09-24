@@ -605,14 +605,98 @@ const server = http.createServer(async (req, res) => {
     return json(res, out);
   }
 
-  // ── Static (public folder) ───────────────────────────────────────────────
-  if (!pathname.startsWith('/admin') && !pathname.startsWith('/api')) {
-    let fp = path.join(__dirname, 'public', pathname === '/' ? 'index.html' : pathname);
-    if (serveStatic(res, fp)) return;
-    fp = path.join(__dirname, 'public', 'index.html');
+  // ── Static assets (CSS, JS, images) ─────────────────────────────────────
+  if (pathname.startsWith('/css/') || pathname.startsWith('/js/') || pathname.startsWith('/img/') || pathname.startsWith('/coa/') || pathname === '/favicon.ico') {
+    const fp = path.join(__dirname, 'public', pathname);
     if (serveStatic(res, fp)) return;
     res.writeHead(404); res.end('Not found');
     return;
+  }
+
+  // ── Page routes ───────────────────────────────────────────────────────────
+  if (!pathname.startsWith('/admin') && !pathname.startsWith('/api')) {
+    const { homePage }       = require('./views/home');
+    const { shopPage }       = require('./views/shop');
+    const { productPage }    = require('./views/product');
+    const { labReportsPage } = require('./views/lab-reports');
+    const { faqPage }        = require('./views/faq');
+    const { checkoutPage }   = require('./views/checkout');
+
+    // Stock for all pages
+    const stockRows = db.prepare(`SELECT id,in_stock,quantity FROM inventory`).all();
+    const stock = {};
+    for (const r of stockRows) stock[r.id] = { in_stock: !!r.in_stock, qty: r.quantity };
+
+    const html = res => { res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' }); };
+
+    // Home
+    if (pathname === '/' || pathname === '') {
+      const latestCoas = db.prepare(`
+        SELECT cf.product_id, cf.lab, cf.date, cf.purity, cf.label,
+          CASE cf.product_id
+            WHEN 'retatrutide-10mg'    THEN 'Retatrutide 10mg'
+            WHEN 'retatrutide-20mg'    THEN 'Retatrutide 20mg'
+            WHEN 'mots-c-10mg'         THEN 'MOTS-c 10mg'
+            WHEN 'mots-c-40mg'         THEN 'MOTS-c 40mg'
+            WHEN 'klow-80mg'           THEN 'KLOW 80mg'
+            WHEN 'glow-70mg'           THEN 'GLOW 70mg'
+            WHEN 'tesamorelin-10mg'    THEN 'Tesamorelin 10mg'
+            WHEN 'cjc-ipamorelin-10mg' THEN 'CJC-1295 / Ipamorelin 10mg'
+            WHEN 'nad-500mg'           THEN 'NAD+ 500mg'
+            WHEN 'nad-1000mg'          THEN 'NAD+ 1000mg'
+            WHEN '5amino1mq-50mg'      THEN '5-Amino-1MQ 50mg'
+            WHEN 'semax-10mg'          THEN 'Semax 10mg'
+            WHEN 'selank-10mg'         THEN 'Selank 10mg'
+            ELSE cf.product_id
+          END as product_name
+        FROM coa_files cf WHERE cf.purity != '' AND cf.purity IS NOT NULL
+        ORDER BY cf.date DESC LIMIT 5`).all();
+      html(res); return res.end(homePage(stock, latestCoas));
+    }
+
+    // Shop
+    if (pathname === '/shop') {
+      const qs = new URL(req.url, 'http://x').searchParams;
+      const cat = qs.get('category') || null;
+      html(res); return res.end(shopPage(stock, cat));
+    }
+
+    // Product detail
+    const prodMatch = pathname.match(/^\/products\/([a-z0-9-]+)$/);
+    if (prodMatch) {
+      const pid = prodMatch[1];
+      const coas = db.prepare(`SELECT filename,label,lab,date,purity,is_current FROM coa_files WHERE product_id=? ORDER BY is_current DESC, date DESC`).all(pid);
+      const page = productPage(pid, stock, coas);
+      if (!page) { res.writeHead(404); return res.end('Product not found'); }
+      html(res); return res.end(page);
+    }
+
+    // Lab reports
+    if (pathname === '/lab-reports') {
+      const allCoas = db.prepare(`SELECT product_id,filename,label,lab,date,purity,is_current FROM coa_files ORDER BY product_id, is_current DESC, date DESC`).all();
+      const byProduct = {};
+      for (const c of allCoas) {
+        if (!byProduct[c.product_id]) byProduct[c.product_id] = [];
+        byProduct[c.product_id].push(c);
+      }
+      html(res); return res.end(labReportsPage(byProduct));
+    }
+
+    // FAQ
+    if (pathname === '/faq') {
+      html(res); return res.end(faqPage());
+    }
+
+    // Checkout
+    if (pathname === '/checkout') {
+      const settings = {};
+      for (const r of db.prepare(`SELECT key,value FROM settings`).all()) settings[r.key] = r.value;
+      html(res); return res.end(checkoutPage(settings));
+    }
+
+    // 404
+    res.writeHead(404, { 'Content-Type': 'text/html' });
+    return res.end('<h1>Page not found</h1><p><a href="/">Return home</a></p>');
   }
 
   // ── Admin login ───────────────────────────────────────────────────────────
