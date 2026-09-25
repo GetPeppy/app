@@ -50,20 +50,22 @@ function homePage(stock, latestCoas) {
     </div>`;
   }).join('');
 
-  const coaRows = (latestCoas||[]).slice(0,5).map(c=>`
-    <tr class="hero-coa-row">
+  const coaRows = (latestCoas||[]).slice(0,5).map(c=>{
+    const purity = c.purity && c.purity.trim() ? c.purity : null;
+    return `<tr class="hero-coa-row">
       <td class="hero-coa-product">${c.product_name||c.product_id}</td>
-      <td class="hero-coa-meta">${c.lab||'—'}</td>
-      <td class="hero-coa-meta">${c.date||'—'}</td>
-      <td class="hero-coa-purity">${c.purity||'—'}</td>
-    </tr>`).join('') || `<tr><td colspan="4" style="padding:18px 0;text-align:center;color:#9CA3AF;font-size:13px">No lab reports on file yet</td></tr>`;
+      <td class="hero-coa-meta" style="text-align:center">${c.lab||'—'}</td>
+      <td class="hero-coa-meta" style="text-align:center">${c.date||'—'}</td>
+      <td class="hero-coa-purity" style="text-align:right">${purity ? '<span style="color:#16A34A;font-weight:700">'+purity+'</span>' : '<a href="/lab-reports" style="font-size:11px;color:#3B6FD4;text-decoration:none">View PDF</a>'}</td>
+    </tr>`;
+  }).join('') || `<tr><td colspan="4" style="padding:18px 0;text-align:center;color:#9CA3AF;font-size:13px">No lab reports on file yet</td></tr>`;
 
   const catTiles = CATS.map(cat=>`
     <a href="/shop?category=${encodeURIComponent(cat.key)}" class="cat-tile">
       <span class="cat-tile-pill" style="color:${cat.color};background:${cat.bg}">${cat.key}</span>
-      <div class="cat-tile-name">${cat.title}</div>
-      <div class="cat-tile-desc">${cat.desc}</div>
-      <div class="cat-tile-products">${cat.products}</div>
+      <div class="cat-tile-name" style="color:#111;font-family:'Fraunces',serif;font-size:22px;font-weight:400;margin-bottom:8px">${cat.title}</div>
+      <div class="cat-tile-desc" style="color:#555">${cat.desc}</div>
+      <div class="cat-tile-products" style="color:#888;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-top:10px">${cat.products}</div>
       <div class="cat-tile-arrow">→</div>
     </a>`).join('');
 
@@ -87,10 +89,10 @@ function homePage(stock, latestCoas) {
           <div class="hero-coa-table-wrap">
             <table class="hero-coa-table">
               <thead><tr>
-                <th class="hero-coa-col-hd" style="text-align:left">PRODUCT</th>
-                <th class="hero-coa-col-hd" style="text-align:center">LAB</th>
-                <th class="hero-coa-col-hd" style="text-align:center">DATE</th>
-                <th class="hero-coa-col-hd" style="text-align:right">PURITY</th>
+                <th class="hero-coa-col-hd" style="text-align:left;padding-bottom:10px">PRODUCT</th>
+                <th class="hero-coa-col-hd" style="text-align:center;padding-bottom:10px">TESTING LAB</th>
+                <th class="hero-coa-col-hd" style="text-align:center;padding-bottom:10px">DATE</th>
+                <th class="hero-coa-col-hd" style="text-align:right;padding-bottom:10px">PURITY</th>
               </tr></thead>
               <tbody>${coaRows}</tbody>
             </table>

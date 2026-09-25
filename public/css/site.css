@@ -5,7 +5,7 @@
 .wordmark-text { font-family:'Inter',sans-serif;font-size:32px;font-weight:900;letter-spacing:-2px;color:#111;line-height:1; }
 .wordmark-text span { color:var(--accent); }
 .word-pep { font-family:'Inter',sans-serif;font-size:32px;font-weight:900;letter-spacing:-2px;color:#111;line-height:1; }
-.word-py { font-family:'Inter',sans-serif;font-size:32px;font-weight:900;letter-spacing:-2px;color:var(--accent);line-height:1; }
+.word-py  { font-family:'Inter',sans-serif;font-size:32px;font-weight:900;letter-spacing:-2px;color:var(--accent);line-height:1; }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
@@ -110,7 +110,7 @@ nav { display: flex; align-items: center; justify-content: space-between; paddin
 .cat-tile { border: 1px solid var(--border); border-radius: 8px; padding: 28px 24px; cursor: pointer; transition: border-color 0.15s, box-shadow 0.15s; background: #fff; text-align: left; }
 .cat-tile:hover { border-color: #111; box-shadow: 0 0 0 1px #111; }
 .cat-tile-pill { display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; padding: 4px 10px; border-radius: 4px; margin-bottom: 14px; }
-.cat-tile-name { font-family: 'Fraunces', serif; font-size: 22px; font-weight: 300; color: #111; margin-bottom: 6px; letter-spacing: -0.3px; }
+.cat-tile-name { font-family: 'Fraunces', serif; font-size: 22px; font-weight: 300; color:#111; margin-bottom: 6px; letter-spacing: -0.3px; }
 .cat-tile-count { font-size: 13px; color: var(--muted); }
 
 /* ── Shop section ────────────────────────────────────────── */
@@ -235,13 +235,7 @@ nav { display: flex; align-items: center; justify-content: space-between; paddin
 .pay-amount { font-size: 16px; font-weight: 700; color: #111; margin-top: 8px; }
 .submit-order-btn { width: 100%; background: #111; color: #fff; border: none; padding: 15px; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; }
 
-/* ── Ticker ──────────────────────────────────────────────── */
-.ticker-wrap { overflow: hidden; background: #fff; border-bottom: 1px solid var(--border); padding: 10px 0; }
-.ticker { display: flex; width: max-content; animation: ticker 35s linear infinite; }
-.ticker:hover { animation-play-state: paused; }
-.ticker-item { white-space: nowrap; padding: 0 40px; font-size: 12px; color: var(--muted); font-weight: 500; }
-.ticker-sep { color: var(--accent); margin: 0 4px; }
-@keyframes ticker { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+ to { transform: translateX(-50%); } }
 
 /* ── Nav ─────────────────────────────────────────────────── */
 nav { display: flex; align-items: center; justify-content: space-between; padding: 16px 48px; border-bottom: 1px solid #E8E8E8; background: #fff; position: sticky; top: 0; z-index: 50; }
@@ -283,7 +277,7 @@ footer { background: #fff; border-top: 1px solid var(--border); padding: 40px 48
 
 
 .hero-coa-header-row { background: #F0F4FB; }
-.hero-coa-col-hd { font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.hero-coa-col-hd { font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color:#9CA3AF; }
 
 
 /* ── Shop grid cards ─────────────────────────────────────── */
@@ -506,7 +500,7 @@ nav[role="navigation"] .nav-links { flex: 1; }
 .cat-tile { border: 1px solid var(--border); border-radius: 8px; padding: 24px; cursor: pointer; background: #fff; transition: border-color .15s, box-shadow .15s; text-decoration: none; display: block; }
 .cat-tile:hover { border-color: #111; box-shadow: 0 0 0 1px #111; }
 .cat-tile-pill { display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; padding: 4px 10px; border-radius: 4px; margin-bottom: 14px; }
-.cat-tile-name { font-family: 'Fraunces', serif; font-size: 22px; font-weight: 300; color: #111; margin-bottom: 6px; letter-spacing: -0.3px; }
+.cat-tile-name { font-family: 'Fraunces', serif; font-size: 22px; font-weight: 300; color:#111; margin-bottom: 6px; letter-spacing: -0.3px; }
 .cat-tile-count { font-size: 13px; color: var(--muted); }
 
 /* Featured cards */
@@ -553,7 +547,7 @@ nav[role="navigation"] .nav-links { flex: 1; }
 @media (max-width: 768px) {
   /* Nav */
   nav[role="navigation"] { padding:0 16px;height:56px;gap:12px; }
-  .wordmark-text, .word-pep, .word-py { font-size:26px; }
+  .wordmark-text, .word-pep, .word-py  { font-family:'Inter',sans-serif;font-size:32px;font-weight:900;letter-spacing:-2px;color:var(--accent);line-height:1; }
   .wordmark-bar { height:28px; }
   .nav-links { display:none; }
   .cart-btn { padding:7px 14px;font-size:12px; }
@@ -616,4 +610,27 @@ nav[role="navigation"] .nav-links { flex: 1; }
 @media (max-width: 480px) {
   .featured-grid { grid-template-columns:1fr; }
   .products-grid { grid-template-columns:1fr; }
+}
+
+/* ── Ticker ── */
+.ticker-wrap {
+  background:#111;overflow:hidden;height:40px;display:flex;align-items:center;
+}
+.ticker {
+  display:inline-flex;animation:ticker-scroll 35s linear infinite;white-space:nowrap;align-items:center;
+}
+.ticker-item {
+  display:inline-flex;align-items:center;gap:0;
+}
+.ticker-text {
+  font-size:11px;font-weight:600;color:rgba(255,255,255,.85);
+  padding:0 0;letter-spacing:.06em;text-transform:uppercase;
+}
+.ticker-sep {
+  display:inline-block;width:4px;height:4px;border-radius:50%;
+  background:var(--accent);margin:0 20px;flex-shrink:0;vertical-align:middle;
+}
+@keyframes ticker-scroll {
+  0%   { transform:translateX(0); }
+  100% { transform:translateX(-50%); }
 }

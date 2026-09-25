@@ -47,22 +47,7 @@ function layout({ title, description, page, body, extraScript = '' }) {
 
 <!-- Ticker BELOW nav -->
 <div class="ticker-wrap">
-  <div class="ticker">
-    <span>Research use only</span><span class="dot"> · </span>
-    <span>Not for human consumption</span><span class="dot"> · </span>
-    <span>Must be 21+ to purchase</span><span class="dot"> · </span>
-    <span>Ships within Canada only</span><span class="dot"> · </span>
-    <span>All prices in CAD</span><span class="dot"> · </span>
-    <span>Lab-tested COAs on every batch</span><span class="dot"> · </span>
-    <span>99%+ HPLC-verified purity</span><span class="dot"> · </span>
-    <span>Research use only</span><span class="dot"> · </span>
-    <span>Not for human consumption</span><span class="dot"> · </span>
-    <span>Must be 21+ to purchase</span><span class="dot"> · </span>
-    <span>Ships within Canada only</span><span class="dot"> · </span>
-    <span>All prices in CAD</span><span class="dot"> · </span>
-    <span>Lab-tested COAs on every batch</span><span class="dot"> · </span>
-    <span>99%+ HPLC-verified purity</span><span class="dot"> · </span>
-  </div>
+  <div class="ticker"><span class="ticker-text">Research Use Only</span><span class="ticker-sep"></span><span class="ticker-text">Not for Human Consumption</span><span class="ticker-sep"></span><span class="ticker-text">Must Be 21+ to Purchase</span><span class="ticker-sep"></span><span class="ticker-text">Ships Within Canada Only</span><span class="ticker-sep"></span><span class="ticker-text">All Prices in CAD</span><span class="ticker-sep"></span><span class="ticker-text">Lab-Tested COAs on Every Batch</span><span class="ticker-sep"></span><span class="ticker-text">99%+ HPLC-Verified Purity</span><span class="ticker-sep"></span><span class="ticker-text">Discrete Packaging</span><span class="ticker-sep"></span><span class="ticker-text">Ships Within 1–2 Business Days</span><span class="ticker-sep"></span><span class="ticker-text">Research Use Only</span><span class="ticker-sep"></span><span class="ticker-text">Not for Human Consumption</span><span class="ticker-sep"></span><span class="ticker-text">Must Be 21+ to Purchase</span><span class="ticker-sep"></span><span class="ticker-text">Ships Within Canada Only</span><span class="ticker-sep"></span><span class="ticker-text">All Prices in CAD</span><span class="ticker-sep"></span><span class="ticker-text">Lab-Tested COAs on Every Batch</span><span class="ticker-sep"></span><span class="ticker-text">99%+ HPLC-Verified Purity</span><span class="ticker-sep"></span><span class="ticker-text">Discrete Packaging</span><span class="ticker-sep"></span><span class="ticker-text">Ships Within 1–2 Business Days</span><span class="ticker-sep"></span></div>
 </div>
 
 <!-- Cart Drawer -->
