@@ -959,6 +959,14 @@ const server = http.createServer(async (req, res) => {
       db.prepare(`UPDATE coa_files SET is_current=1 WHERE id=?`).run(id);
       return json(res, { ok: true });
     }
+    // COAs — update purity/label
+    if (pathname.match(/^\/api\/admin\/coas\/\d+$/) && method === 'PATCH') {
+      const id = pathname.split('/')[4];
+      const data = await body(req);
+      if (data.purity !== undefined) db.prepare(`UPDATE coa_files SET purity=? WHERE id=?`).run(data.purity, id);
+      if (data.label  !== undefined) db.prepare(`UPDATE coa_files SET label=?  WHERE id=?`).run(data.label,  id);
+      return json(res, { ok: true });
+    }
     // COAs — delete
     if (pathname.match(/^\/api\/admin\/coas\/\d+$/) && method === 'DELETE') {
       const id = pathname.split('/')[4];
@@ -1514,15 +1522,20 @@ async function loadCOAs() {
     html += \`<div style="margin-bottom:0">
       <div style="padding:12px 18px;background:#F7F9FF;border-bottom:1px solid #DDE6F5;font-weight:700;font-size:13px;color:#3B6FD4">\${PROD_NAMES[pid]||pid}</div>
       <table style="width:100%">
-        <thead><tr><th>Label</th><th>Lab</th><th>Date</th><th>Purity</th><th>Status</th><th></th></tr></thead>
+        <thead><tr><th>Label</th><th>Lab</th><th>Date</th><th>Purity %</th><th>Status</th><th></th></tr></thead>
         <tbody>\${groups[pid].map(c=>\`<tr>
           <td style="font-size:12px;color:#555">\${c.label}</td>
           <td>\${c.lab||'—'}</td>
           <td style="white-space:nowrap">\${c.date||'—'}</td>
-          <td style="color:#16A34A;font-weight:600">\${c.purity||'—'}</td>
+          <td>
+            \${c.purity
+              ? '<span style="color:#16A34A;font-weight:600">'+c.purity+'</span>'
+              : '<span style="color:#aaa;font-size:12px">Not set</span>'}
+          </td>
           <td>\${c.is_current ? '<span class="badge badge-paid">Current</span>' : '<span style="color:#888;font-size:12px">—</span>'}</td>
           <td style="display:flex;gap:6px;white-space:nowrap">
             <a class="btn btn-ghost btn-sm" href="/coa/\${c.product_id}/\${c.filename}" target="_blank">View</a>
+            <button class="btn btn-ghost btn-sm" onclick="editPurity(\${c.id}, '\${(c.purity||'').replace(/'/g,'')}')">Edit Purity</button>
             \${!c.is_current ? \`<button class="btn btn-blue btn-sm" onclick="setCurrent(\${c.id})">Set Current</button>\` : ''}
             <button class="btn btn-danger btn-sm" onclick="deleteCOA(\${c.id})">Delete</button>
           </td>
@@ -1532,6 +1545,14 @@ async function loadCOAs() {
     </div>\`;
   });
   document.getElementById('coa-table').innerHTML = html;
+}
+
+async function editPurity(id, current) {
+  const val = prompt('Enter purity % for this COA (e.g. 99.64%):', current||'');
+  if (val === null) return; // cancelled
+  const r = await api('/api/admin/coas/'+id,'PATCH',{purity: val.trim()});
+  if (r.ok) { toast('Purity updated'); loadCOAs(); }
+  else toast('Error',true);
 }
 
 async function setCurrent(id) {
