@@ -649,8 +649,9 @@ const server = http.createServer(async (req, res) => {
             WHEN 'selank-10mg'         THEN 'Selank 10mg'
             ELSE cf.product_id
           END as product_name
-        FROM coa_files cf WHERE cf.purity != '' AND cf.purity IS NOT NULL
-        ORDER BY cf.date DESC LIMIT 5`).all();
+        FROM coa_files cf
+        WHERE cf.is_current = 1
+        ORDER BY cf.date DESC, cf.uploaded_at DESC LIMIT 5`).all();
       html(res); return res.end(homePage(stock, latestCoas));
     }
 
