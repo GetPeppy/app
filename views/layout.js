@@ -34,7 +34,7 @@ function layout({ title, description, page, body, extraScript = '' }) {
 <nav role="navigation" aria-label="Main navigation">
   <a href="/" class="wordmark">
     <div class="wordmark-bar"></div>
-    <div class="wordmark-text"><span class="word-pep">PEP</span><span class="word-py">PY</span></div>
+    <div class="wordmark-text"><span style="color:#111;font-family:Inter,sans-serif;font-size:32px;font-weight:900;letter-spacing:-2px">PEP</span><span style="color:#3B6FD4;font-family:Inter,sans-serif;font-size:32px;font-weight:900;letter-spacing:-2px">PY</span></div>
   </a>
   <ul class="nav-links">
     <li><a href="/" class="${page==='home'?'active':''}">Home</a></li>
@@ -93,7 +93,7 @@ function layout({ title, description, page, body, extraScript = '' }) {
   <div class="footer-inner">
     <a href="/" class="wordmark" style="text-decoration:none">
       <div class="wordmark-bar"></div>
-      <div class="wordmark-text"><span class="word-pep">PEP</span><span class="word-py">PY</span></div>
+      <div class="wordmark-text"><span style="color:#111;font-family:Inter,sans-serif;font-size:32px;font-weight:900;letter-spacing:-2px">PEP</span><span style="color:#3B6FD4;font-family:Inter,sans-serif;font-size:32px;font-weight:900;letter-spacing:-2px">PY</span></div>
     </a>
     <nav class="footer-links">
       <a href="/faq">FAQ</a>
