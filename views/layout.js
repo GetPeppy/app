@@ -6,12 +6,12 @@ const PRODUCTS = [
   { id:'klow-80mg',           name:'KLOW',                   dose:'80mg',          price:100, category:'Longevity Research',  cat_color:'#16A34A', cat_bg:'#F0FDF4', desc:'KLOW is a proprietary longevity-focused peptide blend studied in the context of cellular health, mitochondrial function, and aging research.' },
   { id:'glow-70mg',           name:'GLOW',                   dose:'70mg',          price:90,  category:'Longevity Research',  cat_color:'#16A34A', cat_bg:'#F0FDF4', desc:'GLOW is a peptide blend studied for its potential role in longevity pathways, cellular resilience, and NAD+ metabolism in preclinical research.' },
   { id:'tesamorelin-10mg',    name:'Tesamorelin',            dose:'10mg',          price:90,  category:'Growth Research',     cat_color:'#7C3AED', cat_bg:'#F5F3FF', desc:'Tesamorelin is a growth hormone-releasing hormone (GHRH) analogue studied for its effects on GH secretion, body composition, and metabolic parameters in research settings.' },
-  { id:'cjc-ipamorelin-10mg', name:'CJC-1295 / Ipamorelin', dose:'10mg (5mg/5mg)',price:75,  category:'Growth Research',     cat_color:'#7C3AED', cat_bg:'#F5F3FF', desc:'CJC-1295 and Ipamorelin are two growth hormone secretagogues frequently studied in combination for their synergistic effects on GH pulse amplitude and frequency in research models.' },
-  { id:'nad-500mg',           name:'NAD+',                   dose:'500mg',         price:50,  category:'Longevity Research',  cat_color:'#16A34A', cat_bg:'#F0FDF4', desc:'Nicotinamide adenine dinucleotide (NAD+) is a coenzyme essential to cellular energy metabolism, DNA repair, and sirtuin activation, studied extensively in longevity and aging research.' },
-  { id:'nad-1000mg',          name:'NAD+',                   dose:'1000mg',        price:80,  category:'Longevity Research',  cat_color:'#16A34A', cat_bg:'#F0FDF4', desc:'Nicotinamide adenine dinucleotide (NAD+) is a coenzyme essential to cellular energy metabolism, DNA repair, and sirtuin activation, studied extensively in longevity and aging research.' },
+  { id:'cjc-ipamorelin-10mg', name:'CJC-1295 / Ipamorelin', dose:'10mg (5mg/5mg)',price:75,  category:'Growth Research',     cat_color:'#7C3AED', cat_bg:'#F5F3FF', desc:'CJC-1295 and Ipamorelin are studied in combination for their synergistic effects on GH pulse amplitude and frequency in research models.' },
+  { id:'nad-500mg',           name:'NAD+',                   dose:'500mg',         price:50,  category:'Longevity Research',  cat_color:'#16A34A', cat_bg:'#F0FDF4', desc:'NAD+ is a coenzyme essential to cellular energy metabolism, DNA repair, and sirtuin activation, studied extensively in longevity and aging research.' },
+  { id:'nad-1000mg',          name:'NAD+',                   dose:'1000mg',        price:80,  category:'Longevity Research',  cat_color:'#16A34A', cat_bg:'#F0FDF4', desc:'NAD+ is a coenzyme essential to cellular energy metabolism, DNA repair, and sirtuin activation, studied extensively in longevity and aging research.' },
   { id:'5amino1mq-50mg',      name:'5-Amino-1MQ',            dose:'50mg',          price:80,  category:'Metabolic Research',  cat_color:'#D97706', cat_bg:'#FEF3C7', desc:'5-Amino-1MQ is a small molecule NNMT inhibitor studied for its effects on adipogenesis, energy expenditure, and metabolic function in preclinical models.' },
   { id:'semax-10mg',          name:'Semax',                  dose:'10mg',          price:50,  category:'Cognitive Research',  cat_color:'#2563EB', cat_bg:'#EFF6FF', desc:'Semax is a synthetic analogue of ACTH studied for its neuroprotective, nootropic, and anxiolytic properties in preclinical and clinical research contexts.' },
-  { id:'selank-10mg',         name:'Selank',                 dose:'10mg',          price:50,  category:'Cognitive Research',  cat_color:'#2563EB', cat_bg:'#EFF6FF', desc:'Selank is a synthetic analogue of the immunomodulatory peptide tuftsin, studied for its anxiolytic, nootropic, and stress-modulating effects in research settings.' },
+  { id:'selank-10mg',         name:'Selank',                 dose:'10mg',          price:50,  category:'Cognitive Research',  cat_color:'#2563EB', cat_bg:'#EFF6FF', desc:'Selank is a synthetic analogue of tuftsin, studied for its anxiolytic, nootropic, and stress-modulating effects in research settings.' },
 ];
 
 function layout({ title, description, page, body, extraScript = '' }) {
@@ -25,25 +25,17 @@ function layout({ title, description, page, body, extraScript = '' }) {
 <meta name="robots" content="index, follow">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;1,300&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;1,300&family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/site.css">
 </head>
 <body>
 
-<!-- Ticker -->
-<div class="ticker-wrap"><div class="ticker">
-  <span>Research use only</span><span class="dot">·</span>
-  <span>Not for human consumption</span><span class="dot">·</span>
-  <span>Must be 21+ to purchase</span><span class="dot">·</span>
-  <span>Ships within Canada only</span><span class="dot">·</span>
-  <span>All prices in CAD</span><span class="dot">·</span>
-  <span>Lab-tested COAs on every batch</span><span class="dot">·</span>
-  <span>99%+ HPLC-verified purity</span><span class="dot">·</span>
-</div></div>
-
-<!-- Nav -->
+<!-- Nav FIRST -->
 <nav role="navigation" aria-label="Main navigation">
-  <a href="/" class="wordmark"><div class="wordmark-bar"></div><div class="wordmark-text">PEP<span>PY</span></div></a>
+  <a href="/" class="wordmark">
+    <div class="wordmark-bar"></div>
+    <div class="wordmark-text"><span class="word-pep">PEP</span><span class="word-py">PY</span></div>
+  </a>
   <ul class="nav-links">
     <li><a href="/" class="${page==='home'?'active':''}">Home</a></li>
     <li><a href="/shop" class="${page==='shop'||page==='product'?'active':''}">Shop</a></li>
@@ -52,6 +44,26 @@ function layout({ title, description, page, body, extraScript = '' }) {
   </ul>
   <button class="cart-btn" onclick="openCart()">Cart (<span class="cart-count">0</span>)</button>
 </nav>
+
+<!-- Ticker BELOW nav -->
+<div class="ticker-wrap">
+  <div class="ticker">
+    <span>Research use only</span><span class="dot"> · </span>
+    <span>Not for human consumption</span><span class="dot"> · </span>
+    <span>Must be 21+ to purchase</span><span class="dot"> · </span>
+    <span>Ships within Canada only</span><span class="dot"> · </span>
+    <span>All prices in CAD</span><span class="dot"> · </span>
+    <span>Lab-tested COAs on every batch</span><span class="dot"> · </span>
+    <span>99%+ HPLC-verified purity</span><span class="dot"> · </span>
+    <span>Research use only</span><span class="dot"> · </span>
+    <span>Not for human consumption</span><span class="dot"> · </span>
+    <span>Must be 21+ to purchase</span><span class="dot"> · </span>
+    <span>Ships within Canada only</span><span class="dot"> · </span>
+    <span>All prices in CAD</span><span class="dot"> · </span>
+    <span>Lab-tested COAs on every batch</span><span class="dot"> · </span>
+    <span>99%+ HPLC-verified purity</span><span class="dot"> · </span>
+  </div>
+</div>
 
 <!-- Cart Drawer -->
 <div id="cart-overlay" class="cart-overlay" onclick="closeCart()"></div>
@@ -66,7 +78,7 @@ function layout({ title, description, page, body, extraScript = '' }) {
       <div class="cart-total-row" style="font-size:13px;color:#888;margin-bottom:6px"><span>Subtotal</span><span id="cart-subtotal-amt"></span></div>
       <div class="cart-total-row" style="font-size:13px;color:#888;margin-bottom:12px"><span>Shipping</span><span id="cart-shipping-amt"></span></div>
       <div class="cart-total-row"><span>Total</span><strong id="cart-total-amt"></strong></div>
-      <button class="cart-checkout-btn" onclick="window.location='/checkout'">Proceed to Checkout</button>
+      <a href="/checkout" class="cart-checkout-btn" style="display:block;text-align:center;text-decoration:none">Proceed to Checkout</a>
       <p class="cart-note">Payment via USDC, BTC, and e-Transfer · Canada shipping only</p>
     </div>
   </div>
@@ -94,7 +106,10 @@ function layout({ title, description, page, body, extraScript = '' }) {
 <!-- Footer -->
 <footer class="site-footer">
   <div class="footer-inner">
-    <div class="wordmark"><div class="wordmark-bar"></div><div class="wordmark-text">PEP<span>PY</span></div></div>
+    <a href="/" class="wordmark" style="text-decoration:none">
+      <div class="wordmark-bar"></div>
+      <div class="wordmark-text"><span class="word-pep">PEP</span><span class="word-py">PY</span></div>
+    </a>
     <nav class="footer-links">
       <a href="/faq">FAQ</a>
       <a href="/lab-reports">Lab Reports</a>

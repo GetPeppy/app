@@ -1,10 +1,35 @@
 const { layout, PRODUCTS } = require('./layout');
 const FEATURED = ['retatrutide-10mg','semax-10mg','selank-10mg','nad-1000mg'];
+
 const CATS = [
-  { key:'Metabolic Research', sub:'GLP-1 & weight management',     color:'#D97706', bg:'#FEF3C7' },
-  { key:'Cognitive Research', sub:'Focus, mood & neuroprotection', color:'#2563EB', bg:'#EFF6FF' },
-  { key:'Longevity Research', sub:'NAD+, GLOW, KLOW & more',       color:'#16A34A', bg:'#F0FDF4' },
-  { key:'Growth Research',    sub:'GH secretagogues & peptides',   color:'#7C3AED', bg:'#F5F3FF' },
+  {
+    key:'Metabolic Research', color:'#D97706', bg:'#FEF3C7',
+    title:'Metabolic Research',
+    tagline:'GLP-1 & weight management',
+    desc:'Peptides studied for their role in glucose regulation, fat oxidation, and body composition. Includes GLP-1 receptor agonists and metabolic modulators.',
+    products:'Retatrutide, MOTS-c, 5-Amino-1MQ'
+  },
+  {
+    key:'Cognitive Research', color:'#2563EB', bg:'#EFF6FF',
+    title:'Cognitive Research',
+    tagline:'Focus, mood & neuroprotection',
+    desc:'Peptides studied for neuroprotective, anxiolytic, and nootropic effects. Research-focused compounds with strong safety profiles in preclinical models.',
+    products:'Semax, Selank'
+  },
+  {
+    key:'Longevity Research', color:'#16A34A', bg:'#F0FDF4',
+    title:'Longevity Research',
+    tagline:'NAD+, cellular health & aging',
+    desc:'Compounds studied in the context of mitochondrial function, NAD+ metabolism, sirtuin activation, and cellular resilience across aging research.',
+    products:'NAD+ 500mg, NAD+ 1000mg, GLOW, KLOW'
+  },
+  {
+    key:'Growth Research', color:'#7C3AED', bg:'#F5F3FF',
+    title:'Growth Research',
+    tagline:'GH secretagogues & peptides',
+    desc:'Growth hormone releasing peptides and analogues studied for their effects on GH pulse amplitude, body composition, and recovery in research models.',
+    products:'Tesamorelin, CJC-1295 / Ipamorelin'
+  },
 ];
 
 function homePage(stock, latestCoas) {
@@ -31,13 +56,15 @@ function homePage(stock, latestCoas) {
       <td class="hero-coa-meta">${c.lab||'—'}</td>
       <td class="hero-coa-meta">${c.date||'—'}</td>
       <td class="hero-coa-purity">${c.purity||'—'}</td>
-    </tr>`).join('');
+    </tr>`).join('') || `<tr><td colspan="4" style="padding:18px 0;text-align:center;color:#9CA3AF;font-size:13px">No lab reports on file yet</td></tr>`;
 
   const catTiles = CATS.map(cat=>`
     <a href="/shop?category=${encodeURIComponent(cat.key)}" class="cat-tile">
       <span class="cat-tile-pill" style="color:${cat.color};background:${cat.bg}">${cat.key}</span>
-      <div class="cat-tile-name">${cat.key}</div>
-      <div class="cat-tile-count">${cat.sub}</div>
+      <div class="cat-tile-name">${cat.title}</div>
+      <div class="cat-tile-desc">${cat.desc}</div>
+      <div class="cat-tile-products">${cat.products}</div>
+      <div class="cat-tile-arrow">→</div>
     </a>`).join('');
 
   const body = `
@@ -49,7 +76,7 @@ function homePage(stock, latestCoas) {
         <h1>Precision<br>peptides for<br><em>serious research.</em></h1>
         <p class="hero-sub">Third-party tested with certificates of analysis for every batch. No jargon — just science you can trust.</p>
         <div class="hero-actions">
-          <a href="/shop" class="hero-btn">Shop Now</a>
+          <a href="/shop" style="display:inline-block;background:#3B6FD4;color:#fff;padding:16px 48px;font-size:16px;font-weight:700;border-radius:8px;text-decoration:none;font-family:'Inter',sans-serif">Shop Now</a>
         </div>
       </div>
       <div class="hero-coa-panel">
@@ -65,7 +92,7 @@ function homePage(stock, latestCoas) {
                 <th class="hero-coa-col-hd" style="text-align:center">DATE</th>
                 <th class="hero-coa-col-hd" style="text-align:right">PURITY</th>
               </tr></thead>
-              <tbody>${coaRows||'<tr><td colspan="4" style="padding:16px;text-align:center;color:#888;font-size:13px">No lab reports yet</td></tr>'}</tbody>
+              <tbody>${coaRows}</tbody>
             </table>
           </div>
           <a href="/lab-reports" class="hero-coa-link">View all lab reports →</a>
