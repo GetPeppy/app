@@ -5,6 +5,8 @@ function checkoutPage(settings) {
   <div class="container" style="padding-top:48px;padding-bottom:64px;max-width:1100px">
     <h1 style="font-family:'Fraunces',serif;font-size:36px;font-weight:300;margin-bottom:32px">Checkout</h1>
     <div class="checkout-layout">
+
+      <!-- LEFT: form -->
       <div>
         <h2 class="checkout-heading">Contact & Shipping</h2>
         <div class="co-row-2">
@@ -32,10 +34,11 @@ function checkoutPage(settings) {
         </div>
 
         <div id="co-error" style="display:none;background:#FEE2E2;color:#991B1B;padding:12px 16px;border-radius:6px;margin-top:8px;font-size:13px"></div>
-        <button class="co-submit-btn" onclick="placeOrder()">Place Order →</button>
+        <button class="co-submit-btn" id="co-submit-btn" onclick="placeOrder()">Place Order →</button>
         <p class="co-legal">For research use only. Not for human consumption. Must be 21+ to purchase.</p>
       </div>
 
+      <!-- RIGHT: order summary with editable quantities -->
       <div class="checkout-summary-col">
         <h2 class="checkout-heading">Order Summary</h2>
         <div id="co-items" class="co-items"></div>
@@ -48,7 +51,7 @@ function checkoutPage(settings) {
       </div>
     </div>
 
-    <!-- Confirmation overlay -->
+    <!-- Confirmation overlay (shown after order placed) -->
     <div id="confirm-overlay" style="display:none;position:fixed;inset:0;background:#fff;z-index:200;overflow-y:auto;padding:60px 24px">
       <div style="max-width:600px;margin:0 auto;text-align:center" id="confirm-content"></div>
     </div>
@@ -63,74 +66,117 @@ function checkoutPage(settings) {
     _payMethod = method;
   }
 
+  // Checkout has its own copy of cart quantities so changes here are authoritative
+  function coChangeQty(id, delta) {
+    cart[id] = (cart[id] || 0) + delta;
+    if (cart[id] <= 0) delete cart[id];
+    saveCart();
+    updateCartCount();
+    renderSummary();
+  }
+  function coRemove(id) {
+    delete cart[id];
+    saveCart();
+    updateCartCount();
+    renderSummary();
+  }
+
   function renderSummary() {
-    if (!window.PRODUCTS || !window.cart) return;
+    var itemsEl = document.getElementById('co-items');
     var keys = Object.keys(cart);
     if (!keys.length) {
-      document.getElementById('co-items').innerHTML = '<p style="color:#888;font-size:14px">Your cart is empty. <a href="/shop" style="color:#3B6FD4">Continue shopping</a></p>';
+      itemsEl.innerHTML = '<p style="color:#888;font-size:14px;padding:8px 0">Your cart is empty. <a href="/shop" style="color:#3B6FD4">Continue shopping</a></p>';
       document.getElementById('co-subtotal').textContent = 'CA$0';
-      document.getElementById('co-ship').textContent = 'CA$25';
-      document.getElementById('co-total').textContent = 'CA$25';
-      document.querySelector('.co-submit-btn').disabled = true;
+      document.getElementById('co-ship').textContent    = 'CA$25';
+      document.getElementById('co-total').textContent   = 'CA$25';
+      var btn = document.getElementById('co-submit-btn');
+      if (btn) btn.disabled = true;
       return;
     }
-    var total = 0; var html = '';
+    var btn = document.getElementById('co-submit-btn');
+    if (btn) btn.disabled = false;
+
+    var sub = 0; var html = '';
     keys.forEach(function(id) {
-      var p = PRODUCTS.find(function(x){ return x.id===id; });
+      var p = PRODUCTS.find(function(x){ return x.id === id; });
       if (!p) return;
-      var qty = cart[id]; var line = p.price*qty; total+=line;
-      html += '<div class="co-item"><span>'+p.name+' '+p.dose+' ×'+qty+'</span><span>CA$'+line+'</span></div>';
+      var qty = cart[id]; var line = p.price * qty; sub += line;
+      html += '<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #EEF3FB">'
+        + '<img src="/img/' + id + '.jpg" style="width:48px;height:48px;object-fit:cover;border-radius:6px;flex-shrink:0">'
+        + '<div style="flex:1;min-width:0">'
+        + '<div style="font-size:13px;font-weight:600;color:#111">' + p.name + ' <span style="color:#888;font-weight:400">' + p.dose + '</span></div>'
+        + '<div style="display:flex;align-items:center;gap:8px;margin-top:6px">'
+        + '<button onclick="coChangeQty(\''+id+'\',-1)" style="width:26px;height:26px;border-radius:50%;border:1px solid #E0E0E0;background:#F9F9F9;cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;font-family:Inter,sans-serif">−</button>'
+        + '<span style="font-size:13px;font-weight:600;min-width:16px;text-align:center">' + qty + '</span>'
+        + '<button onclick="coChangeQty(\''+id+'\',1)" style="width:26px;height:26px;border-radius:50%;border:1px solid #E0E0E0;background:#F9F9F9;cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;font-family:Inter,sans-serif">+</button>'
+        + '</div></div>'
+        + '<div style="text-align:right;flex-shrink:0">'
+        + '<div style="font-size:14px;font-weight:700;color:#111">CA$' + line + '</div>'
+        + '<button onclick="coRemove(\''+id+'\')" style="font-size:11px;color:#aaa;background:none;border:none;cursor:pointer;margin-top:4px;font-family:Inter,sans-serif">Remove</button>'
+        + '</div></div>';
     });
-    document.getElementById('co-items').innerHTML = html;
-    var ship = total>=500?0:25;
-    document.getElementById('co-subtotal').textContent = 'CA$'+total;
-    document.getElementById('co-ship').textContent = ship===0?'Free — over CA$500':'CA$25';
-    document.getElementById('co-total').textContent = 'CA$'+(total+ship);
+    itemsEl.innerHTML = html;
+
+    var ship = sub >= 500 ? 0 : 25;
+    document.getElementById('co-subtotal').textContent = 'CA$' + sub;
+    document.getElementById('co-ship').textContent     = ship === 0 ? 'Free — over CA$500' : 'CA$25';
+    document.getElementById('co-total').textContent    = 'CA$' + (sub + ship);
   }
 
   async function placeOrder() {
-    var name=document.getElementById('co-name').value.trim();
-    var email=document.getElementById('co-email').value.trim();
-    var address=document.getElementById('co-address').value.trim();
-    var city=document.getElementById('co-city').value.trim();
-    var prov=document.getElementById('co-province').value;
-    var postal=document.getElementById('co-postal').value.trim();
-    var phone=document.getElementById('co-phone').value.trim();
-    var errEl=document.getElementById('co-error');
+    var name    = document.getElementById('co-name').value.trim();
+    var email   = document.getElementById('co-email').value.trim();
+    var address = document.getElementById('co-address').value.trim();
+    var city    = document.getElementById('co-city').value.trim();
+    var prov    = document.getElementById('co-province').value;
+    var postal  = document.getElementById('co-postal').value.trim();
+    var phone   = document.getElementById('co-phone').value.trim();
+    var errEl   = document.getElementById('co-error');
+
     if (!name||!email||!address||!city||!prov||!postal) {
       errEl.textContent='Please fill in all required fields.'; errEl.style.display='block'; return;
     }
-    var items=Object.keys(cart).map(function(id){
-      var p=PRODUCTS.find(function(x){return x.id===id;});
-      return p?{id:p.id,name:p.name,dose:p.dose,price:p.price,qty:cart[id]}:null;
+
+    // Build items and subtotal from CURRENT cart state
+    var items = Object.keys(cart).map(function(id){
+      var p = PRODUCTS.find(function(x){ return x.id===id; });
+      return p ? {id:p.id, name:p.name, dose:p.dose, price:p.price, qty:cart[id]} : null;
     }).filter(Boolean);
-    var sub=items.reduce(function(t,i){return t+i.price*i.qty;},0);
-    var btn=document.querySelector('.co-submit-btn');
-    if(btn){btn.textContent='Placing order…';btn.disabled=true;}
+    var sub = items.reduce(function(t,i){ return t + i.price*i.qty; }, 0);
+
+    var btn = document.getElementById('co-submit-btn');
+    if (btn) { btn.textContent='Placing order…'; btn.disabled=true; }
     errEl.style.display='none';
+
     try {
-      var r=await fetch('/api/order',{method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({name,email,address,city,province:prov,postal,phone,items,subtotal:sub,payment_method:_payMethod})});
-      var d=await r.json();
-      if(!d.ok) throw new Error(d.error||'Order failed');
-      if(typeof clearCart==='function') clearCart(); else { cart={}; updateCartCount(); }
-      showConfirmation(d.ref,d.payment_address,d.total,d.shipping,_payMethod);
+      var r = await fetch('/api/order', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({name,email,address,city,province:prov,postal,phone,items,subtotal:sub,payment_method:_payMethod})
+      });
+      var d = await r.json();
+      if (!d.ok) throw new Error(d.error||'Order failed');
+
+      // Clear cart
+      if (typeof clearCart==='function') clearCart(); else { cart={}; if(typeof saveCart==='function') saveCart(); updateCartCount(); }
+
+      showConfirmation(d.ref, d.payment_address, d.total, d.shipping, _payMethod);
     } catch(e) {
-      errEl.textContent='Error: '+e.message; errEl.style.display='block';
-      if(btn){btn.textContent='Place Order →';btn.disabled=false;}
+      errEl.textContent = e.message; errEl.style.display='block';
+      if (btn) { btn.textContent='Place Order →'; btn.disabled=false; }
     }
   }
 
   function showConfirmation(ref, payAddr, total, shipping, method) {
-    var mLabel={usdc:'USDC (Ethereum)',btc:'Bitcoin',etransfer:'e-Transfer'}[method]||method;
-    var el=document.getElementById('confirm-content');
-    el.innerHTML='<div style="width:64px;height:64px;background:#16A34A;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:28px;margin:0 auto 20px">✓</div>'
+    var mLabel = {usdc:'USDC (Ethereum)',btc:'Bitcoin',etransfer:'e-Transfer'}[method]||method;
+    document.getElementById('confirm-content').innerHTML =
+      '<div style="width:64px;height:64px;background:#16A34A;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:28px;margin:0 auto 20px">✓</div>'
       +'<h1 style="font-family:Fraunces,serif;font-size:36px;font-weight:300;margin-bottom:8px">Order Placed!</h1>'
       +'<p style="font-size:16px;color:#555;margin-bottom:6px">Reference: <strong>'+ref+'</strong></p>'
-      +'<p style="font-size:14px;color:#888;margin-bottom:32px">Your order has been received. Please complete payment below and we will confirm within 1 business day.</p>'
+      +'<p style="font-size:14px;color:#888;margin-bottom:32px">Your order has been received. Please send payment below and we will confirm within 1 business day.</p>'
       +'<div style="background:#F7F9FF;border:1px solid #DDE6F5;border-radius:10px;padding:24px;text-align:left;margin-bottom:24px">'
       +'<p style="font-size:14px;color:#555;margin-bottom:10px">Send <strong>CA$'+total+'</strong> via '+mLabel+' to:</p>'
-      +'<div style="font-family:monospace;font-size:13px;background:#fff;border:1px solid #DDE6F5;border-radius:6px;padding:12px;word-break:break-all">'+(payAddr||'Contact us for payment details')+'</div>'
+      +'<div style="font-family:monospace;font-size:13px;background:#fff;border:1px solid #DDE6F5;border-radius:6px;padding:12px;word-break:break-all">'+(payAddr||'Contact us for payment address')+'</div>'
       +'<p style="font-size:12px;color:#888;margin-top:10px">Include <strong>'+ref+'</strong> in your payment memo.</p>'
       +'</div>'
       +'<a href="/" style="display:inline-block;background:#3B6FD4;color:#fff;padding:14px 36px;font-size:15px;font-weight:700;border-radius:8px;text-decoration:none">Return to Shop</a>';
