@@ -184,7 +184,7 @@ function checkoutPage(settings) {
     window.scrollTo(0,0);
   }
 
-  document.addEventListener('DOMContentLoaded', renderSummary);
+  // renderSummary called by cart.js after localStorage loads
   </script>`;
 
   return layout({ title: 'Checkout', page: 'checkout', body });

@@ -114,6 +114,8 @@ async function submitNotify() {
 
 document.addEventListener('DOMContentLoaded', function() {
   updateCartCount();
+  // If we're on checkout, render the summary now that cart is loaded
+  if (typeof renderSummary === 'function') renderSummary();
   var overlay = document.getElementById('cart-overlay');
   if (overlay) overlay.addEventListener('click', closeCart);
   var notifyModal = document.getElementById('notify-modal');
