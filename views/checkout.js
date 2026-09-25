@@ -58,9 +58,7 @@ function checkoutPage(settings) {
   </div>
 `;
 
-  return layout({ title: 'Checkout', page: 'checkout', body, extraScript: `<script>
-${script_body}
-</script>` });
+  return layout({ title: 'Checkout', page: 'checkout', body });
 }
 
 module.exports = { checkoutPage };
