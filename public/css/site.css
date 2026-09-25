@@ -547,7 +547,9 @@ nav[role="navigation"] .nav-links { flex: 1; }
 @media (max-width: 768px) {
   /* Nav */
   nav[role="navigation"] { padding:0 16px;height:56px;gap:12px; }
-  .wordmark-text, .word-pep, .word-py  { font-family:'Inter',sans-serif;font-size:32px;font-weight:900;letter-spacing:-2px;color:var(--accent);line-height:1; }
+  .wordmark-text { font-family:'Inter',sans-serif;font-size:26px;font-weight:900;letter-spacing:-1.5px;color:#111;line-height:1; }
+  .word-pep { font-size:26px;color:#111; }
+  .word-py  { font-size:26px;color:var(--accent); }
   .wordmark-bar { height:28px; }
   .nav-links { display:none; }
   .cart-btn { padding:7px 14px;font-size:12px; }
