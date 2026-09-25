@@ -52,11 +52,11 @@ function homePage(stock, latestCoas) {
 
   const coaRows = (latestCoas||[]).slice(0,5).map(c=>{
     const purity = c.purity && c.purity.trim() ? c.purity : null;
-    return `<tr class="hero-coa-row">
-      <td class="hero-coa-product">${c.product_name||c.product_id}</td>
-      <td class="hero-coa-meta" style="text-align:center">${c.lab||'—'}</td>
-      <td class="hero-coa-meta" style="text-align:center">${c.date||'—'}</td>
-      <td class="hero-coa-purity" style="text-align:right">${purity ? '<span style="color:#16A34A;font-weight:700">'+purity+'</span>' : '<a href="/lab-reports" style="font-size:11px;color:#3B6FD4;text-decoration:none">View PDF</a>'}</td>
+    return `<tr>
+      <td style="font-size:14px;font-weight:600;color:#111;padding:13px 0;border-bottom:1px solid rgba(0,0,0,.06)">${c.product_name||c.product_id}</td>
+      <td style="font-size:13px;color:#666;padding:13px 12px;border-bottom:1px solid rgba(0,0,0,.06);text-align:center">${c.lab||'—'}</td>
+      <td style="font-size:13px;color:#666;padding:13px 12px;border-bottom:1px solid rgba(0,0,0,.06);text-align:center">${c.date||'—'}</td>
+      <td style="padding:13px 0;border-bottom:1px solid rgba(0,0,0,.06);text-align:right">${purity ? '<span style="color:#16A34A;font-weight:700;font-size:14px">'+purity+'</span>' : '<a href="/lab-reports" style="font-size:12px;color:#3B6FD4;text-decoration:none;font-weight:600">View PDF</a>'}</td>
     </tr>`;
   }).join('') || `<tr><td colspan="4" style="padding:18px 0;text-align:center;color:#9CA3AF;font-size:13px">No lab reports on file yet</td></tr>`;
 
@@ -89,10 +89,10 @@ function homePage(stock, latestCoas) {
           <div class="hero-coa-table-wrap">
             <table class="hero-coa-table">
               <thead><tr>
-                <th class="hero-coa-col-hd" style="text-align:left;padding-bottom:10px">PRODUCT</th>
-                <th class="hero-coa-col-hd" style="text-align:center;padding-bottom:10px">TESTING LAB</th>
-                <th class="hero-coa-col-hd" style="text-align:center;padding-bottom:10px">DATE</th>
-                <th class="hero-coa-col-hd" style="text-align:right;padding-bottom:10px">PURITY</th>
+                <th style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#9CA3AF;padding:0 0 12px;text-align:left;border-bottom:1px solid rgba(0,0,0,.08)">PRODUCT</th>
+                <th style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#9CA3AF;padding:0 12px 12px;text-align:center;border-bottom:1px solid rgba(0,0,0,.08)">TESTING LAB</th>
+                <th style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#9CA3AF;padding:0 12px 12px;text-align:center;border-bottom:1px solid rgba(0,0,0,.08)">DATE</th>
+                <th style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#9CA3AF;padding:0 0 12px;text-align:right;border-bottom:1px solid rgba(0,0,0,.08)">PURITY</th>
               </tr></thead>
               <tbody>${coaRows}</tbody>
             </table>

@@ -636,3 +636,16 @@ nav[role="navigation"] .nav-links { flex: 1; }
   0%   { transform:translateX(0); }
   100% { transform:translateX(-50%); }
 }
+
+/* ── Hamburger & Mobile Nav ── */
+.hamburger { display:none;flex-direction:column;gap:5px;background:none;border:none;cursor:pointer;padding:4px; }
+.hamburger span { display:block;width:22px;height:2px;background:#111;border-radius:2px;transition:all .2s; }
+.mobile-nav { display:none;flex-direction:column;background:#fff;border-bottom:1px solid var(--border);padding:8px 0; }
+.mobile-nav a { display:block;padding:14px 20px;font-size:15px;font-weight:500;color:#111;text-decoration:none;border-bottom:1px solid #F5F5F5; }
+.mobile-nav a:last-child { border-bottom:none; }
+.mobile-nav a:hover { background:#F7F9FF; }
+.mobile-nav.open { display:flex; }
+@media (max-width: 768px) {
+  .hamburger { display:flex; }
+  .nav-links { display:none !important; }
+}

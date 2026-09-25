@@ -1,5 +1,10 @@
 // ── Cart & shared JS ──────────────────────────────────────────────────────────
 var cart = {};
+try { var _saved = localStorage.getItem('peppy_cart'); if (_saved) cart = JSON.parse(_saved); } catch(e) {}
+
+function saveCart() {
+  try { localStorage.setItem('peppy_cart', JSON.stringify(cart)); } catch(e) {}
+}
 
 function updateCartCount() {
   var count = Object.values(cart).reduce(function(s,q){ return s+q; }, 0);
@@ -8,6 +13,7 @@ function updateCartCount() {
 
 function addToCart(id, name, dose, price) {
   cart[id] = (cart[id] || 0) + 1;
+  saveCart();
   updateCartCount();
   openCart();
   renderCart();
@@ -68,9 +74,10 @@ function renderCart() {
 function changeQty(id, delta) {
   cart[id] = (cart[id] || 0) + delta;
   if (cart[id] <= 0) delete cart[id];
+  saveCart();
   updateCartCount(); renderCart();
 }
-function removeItem(id) { delete cart[id]; updateCartCount(); renderCart(); }
+function removeItem(id) { delete cart[id]; saveCart(); updateCartCount(); renderCart(); }
 
 function showToast(msg) {
   var t = document.getElementById('toast');
@@ -78,6 +85,8 @@ function showToast(msg) {
   t.textContent = msg; t.classList.add('show');
   setTimeout(function(){ t.classList.remove('show'); }, 2500);
 }
+
+function clearCart() { cart = {}; saveCart(); updateCartCount(); renderCart(); }
 
 // Notify Me modal
 var _notifyProductId = null;

@@ -66,7 +66,14 @@ function checkoutPage(settings) {
   function renderSummary() {
     if (!window.PRODUCTS || !window.cart) return;
     var keys = Object.keys(cart);
-    if (!keys.length) { window.location = '/shop'; return; }
+    if (!keys.length) {
+      document.getElementById('co-items').innerHTML = '<p style="color:#888;font-size:14px">Your cart is empty. <a href="/shop" style="color:#3B6FD4">Continue shopping</a></p>';
+      document.getElementById('co-subtotal').textContent = 'CA$0';
+      document.getElementById('co-ship').textContent = 'CA$25';
+      document.getElementById('co-total').textContent = 'CA$25';
+      document.querySelector('.co-submit-btn').disabled = true;
+      return;
+    }
     var total = 0; var html = '';
     keys.forEach(function(id) {
       var p = PRODUCTS.find(function(x){ return x.id===id; });
@@ -106,7 +113,7 @@ function checkoutPage(settings) {
         body:JSON.stringify({name,email,address,city,province:prov,postal,phone,items,subtotal:sub,payment_method:_payMethod})});
       var d=await r.json();
       if(!d.ok) throw new Error(d.error||'Order failed');
-      cart={}; updateCartCount();
+      if(typeof clearCart==='function') clearCart(); else { cart={}; updateCartCount(); }
       showConfirmation(d.ref,d.payment_address,d.total,d.shipping,_payMethod);
     } catch(e) {
       errEl.textContent='Error: '+e.message; errEl.style.display='block';

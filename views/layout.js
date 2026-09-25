@@ -42,8 +42,17 @@ function layout({ title, description, page, body, extraScript = '' }) {
     <li><a href="/lab-reports" class="${page==='lab-reports'?'active':''}">Lab Reports</a></li>
     <li><a href="/faq" class="${page==='faq'?'active':''}">FAQ</a></li>
   </ul>
+  <button class="hamburger" onclick="toggleMobileNav()" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
   <button class="cart-btn" onclick="openCart()">Cart (<span class="cart-count">0</span>)</button>
 </nav>
+<div id="mobile-nav" class="mobile-nav">
+  <a href="/" onclick="closeMobileNav()">Home</a>
+  <a href="/shop" onclick="closeMobileNav()">Shop</a>
+  <a href="/lab-reports" onclick="closeMobileNav()">Lab Reports</a>
+  <a href="/faq" onclick="closeMobileNav()">FAQ</a>
+</div>
 
 <!-- Ticker BELOW nav -->
 <div class="ticker-wrap">
@@ -104,7 +113,10 @@ function layout({ title, description, page, body, extraScript = '' }) {
   </div>
 </footer>
 
-<script>var PRODUCTS=${JSON.stringify(PRODUCTS)};</script>
+<script>var PRODUCTS=${JSON.stringify(PRODUCTS)};
+function toggleMobileNav(){var n=document.getElementById('mobile-nav');n.classList.toggle('open');}
+function closeMobileNav(){document.getElementById('mobile-nav').classList.remove('open');}
+</script>
 <script src="/js/cart.js"></script>
 ${extraScript}
 </body></html>`;
