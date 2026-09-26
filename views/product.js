@@ -1,6 +1,6 @@
 const { layout, PRODUCTS } = require('./layout');
 
-function productPage(productId, stock, coas) {
+function productPage(productId, stock, coas, prices = {}) {
   const p = PRODUCTS.find(x => x.id === productId);
   if (!p) return null;
 
@@ -59,6 +59,7 @@ function productPage(productId, stock, coas) {
   </div>`;
 
   return layout({
+    prices,
     title: `${p.name} ${p.dose}`,
     page: 'product',
     description: `${p.name} ${p.dose} — ${p.desc.slice(0, 120)}…`,

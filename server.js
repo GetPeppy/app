@@ -622,10 +622,10 @@ const server = http.createServer(async (req, res) => {
     const { faqPage }        = require('./views/faq');
     const { checkoutPage }   = require('./views/checkout');
 
-    // Stock for all pages
-    const stockRows = db.prepare(`SELECT id,in_stock,quantity FROM inventory`).all();
+    // Stock + prices for all pages
+    const stockRows = db.prepare(`SELECT id,in_stock,quantity,price FROM inventory`).all();
     const stock = {};
-    for (const r of stockRows) stock[r.id] = { in_stock: !!r.in_stock, qty: r.quantity };
+    for (const r of stockRows) stock[r.id] = { in_stock: !!r.in_stock, qty: r.quantity, price: r.price };
 
     const html = res => { res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' }); };
 
@@ -652,14 +652,18 @@ const server = http.createServer(async (req, res) => {
         FROM coa_files cf
         WHERE cf.is_current = 1
         ORDER BY cf.date DESC, cf.uploaded_at DESC LIMIT 5`).all();
-      html(res); return res.end(homePage(stock, latestCoas));
+      const prices = {};
+      for (const r of stockRows) if (r.price) prices[r.id] = r.price;
+      html(res); return res.end(homePage(stock, latestCoas, prices));
     }
 
     // Shop
     if (pathname === '/shop') {
       const qs = new URL(req.url, 'http://x').searchParams;
       const cat = qs.get('category') || null;
-      html(res); return res.end(shopPage(stock, cat));
+      const prices2 = {};
+      for (const r of stockRows) if (r.price) prices2[r.id] = r.price;
+      html(res); return res.end(shopPage(stock, cat, prices2));
     }
 
     // Product detail
@@ -667,7 +671,9 @@ const server = http.createServer(async (req, res) => {
     if (prodMatch) {
       const pid = prodMatch[1];
       const coas = db.prepare(`SELECT filename,label,lab,date,purity,is_current FROM coa_files WHERE product_id=? ORDER BY is_current DESC, date DESC`).all(pid);
-      const page = productPage(pid, stock, coas);
+      const prices3 = {};
+      for (const r of stockRows) if (r.price) prices3[r.id] = r.price;
+      const page = productPage(pid, stock, coas, prices3);
       if (!page) { res.writeHead(404); return res.end('Product not found'); }
       html(res); return res.end(page);
     }
@@ -692,7 +698,9 @@ const server = http.createServer(async (req, res) => {
     if (pathname === '/checkout') {
       const settings = {};
       for (const r of db.prepare(`SELECT key,value FROM settings`).all()) settings[r.key] = r.value;
-      html(res); return res.end(checkoutPage(settings));
+      const prices4 = {};
+      for (const r of stockRows) if (r.price) prices4[r.id] = r.price;
+      html(res); return res.end(checkoutPage(settings, prices4));
     }
 
     // 404

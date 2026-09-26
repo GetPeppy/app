@@ -14,7 +14,7 @@ const PRODUCTS = [
   { id:'selank-10mg',         name:'Selank',                 dose:'10mg',          price:50,  category:'Cognitive Research',  cat_color:'#2563EB', cat_bg:'#EFF6FF', desc:'Selank is a synthetic analogue of tuftsin, studied for its anxiolytic, nootropic, and stress-modulating effects in research settings.' },
 ];
 
-function layout({ title, description, page, body, extraScript = '' }) {
+function layout({ title, description, page, body, extraScript = '', prices = null }) {
   return `<!DOCTYPE html>
 <html lang="en">
 <head>

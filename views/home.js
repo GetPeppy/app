@@ -32,7 +32,7 @@ const CATS = [
   },
 ];
 
-function homePage(stock, latestCoas) {
+function homePage(stock, latestCoas, prices = {}) {
   const featuredCards = FEATURED.map(id => {
     const p = PRODUCTS.find(x => x.id === id); if (!p) return '';
     const inStock = stock[id] ? stock[id].in_stock : true;
@@ -155,6 +155,7 @@ function homePage(stock, latestCoas) {
   </section>`;
 
   return layout({ title:'Precision Peptides · Canada', page:'home', body,
+    prices,
     description:'Research-grade peptides for Canadian researchers. Third-party tested, 99%+ purity, COAs on every batch.' });
 }
 

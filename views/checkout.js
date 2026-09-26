@@ -1,6 +1,6 @@
 const { layout } = require('./layout');
 
-function checkoutPage(settings) {
+function checkoutPage(settings, prices = {}) {
   // The checkout script must come AFTER PRODUCTS and cart.js
   // So we put it in extraScript which layout renders after those
   const checkoutScript = `<script>
@@ -177,7 +177,8 @@ renderSummary();
     </div>
   </div>`;
 
-  return layout({ title: 'Checkout', page: 'checkout', body, extraScript: checkoutScript });
+  return layout({ title: 'Checkout', page: 'checkout', body,
+    prices, extraScript: checkoutScript });
 }
 
 module.exports = { checkoutPage };

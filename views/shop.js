@@ -2,7 +2,7 @@ const { layout, PRODUCTS } = require('./layout');
 
 const CATS = ['Metabolic Research','Cognitive Research','Longevity Research','Growth Research'];
 
-function shopPage(stock, activeCategory) {
+function shopPage(stock, activeCategory, prices = {}) {
   // Group products by category
   const groups = CATS.map(cat => ({
     cat,
@@ -61,6 +61,7 @@ function shopPage(stock, activeCategory) {
   </div>`;
 
   return layout({ title: 'Shop', page: 'shop', body,
+    prices,
     description: 'Browse all research-grade peptides. Retatrutide, MOTS-c, NAD+, Semax, Selank, Tesamorelin and more. Third-party tested, ships across Canada.' });
 }
 
