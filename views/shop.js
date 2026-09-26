@@ -22,7 +22,7 @@ function shopPage(stock, activeCategory, prices = {}) {
     const cards = g.products.map(p => {
       const inStock = stock[p.id]?.in_stock !== false;
       const btn = inStock
-        ? `<button class="product-card-btn" onclick="event.stopPropagation();addToCart('${p.id}','${p.name}','${p.dose}',${p.price})">Add to Cart</button>`
+        ? `<button class="product-card-btn" onclick="event.stopPropagation();addToCart('${p.id}','${p.name}','${p.dose}',${(prices[p.id]!==undefined?prices[p.id]:p.price)})">Add to Cart</button>`
         : `<button class="product-card-btn notify" onclick="event.stopPropagation();openNotify('${p.id}','${p.name} ${p.dose}')">Notify Me</button>`;
       return `
       <div class="product-card" onclick="window.location='/products/${p.id}'">
@@ -31,7 +31,7 @@ function shopPage(stock, activeCategory, prices = {}) {
           <span class="product-card-cat" style="color:${p.cat_color};background:${p.cat_bg}">${p.category}</span>
           <div class="product-card-name">${p.name}</div>
           <div class="product-card-dose">${p.dose}</div>
-          <div class="product-card-price">CA$${p.price}</div>
+          <div class="product-card-price">CA$${(prices[p.id]!==undefined?prices[p.id]:p.price)}</div>
           ${btn}
         </div>
       </div>`;

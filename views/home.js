@@ -37,7 +37,7 @@ function homePage(stock, latestCoas, prices = {}) {
     const p = PRODUCTS.find(x => x.id === id); if (!p) return '';
     const inStock = stock[id] ? stock[id].in_stock : true;
     const btn = inStock
-      ? `<button class="featured-card-btn" onclick="event.stopPropagation();addToCart('${p.id}','${p.name}','${p.dose}',${p.price})">Add to Cart</button>`
+      ? `<button class="featured-card-btn" onclick="event.stopPropagation();addToCart('${p.id}','${p.name}','${p.dose}',${(prices[p.id]!==undefined?prices[p.id]:p.price)})">Add to Cart</button>`
       : `<button class="featured-card-btn notify" onclick="event.stopPropagation();openNotify('${p.id}','${p.name} ${p.dose}')">Notify Me</button>`;
     return `<div class="featured-card" onclick="window.location='/products/${p.id}'" style="cursor:pointer">
       <div class="featured-card-img"><img src="/img/${p.id}.jpg" alt="${p.name} ${p.dose}" loading="lazy"></div>
@@ -45,7 +45,7 @@ function homePage(stock, latestCoas, prices = {}) {
         <div style="display:inline-block;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:3px 8px;border-radius:4px;margin-bottom:8px;color:${p.cat_color};background:${p.cat_bg}">${p.category}</div>
         <div class="featured-card-name">${p.name}</div>
         <div class="featured-card-dose">${p.dose}</div>
-        <div class="featured-card-footer"><span class="featured-card-price">CA$${p.price}</span>${btn}</div>
+        <div class="featured-card-footer"><span class="featured-card-price">CA$${(prices[p.id]!==undefined?prices[p.id]:p.price)}</span>${btn}</div>
       </div>
     </div>`;
   }).join('');

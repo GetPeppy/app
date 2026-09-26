@@ -6,7 +6,7 @@ function productPage(productId, stock, coas, prices = {}) {
 
   const inStock = stock[productId]?.in_stock !== false;
   const btn = inStock
-    ? `<button class="product-detail-btn" onclick="addToCart('${p.id}','${p.name}','${p.dose}',${p.price});window.scrollTo(0,0)">Add to Cart</button>`
+    ? `<button class="product-detail-btn" onclick="addToCart('${p.id}','${p.name}','${p.dose}',${(prices[p.id]!==undefined?prices[p.id]:p.price)});window.scrollTo(0,0)">Add to Cart</button>`
     : `<button class="product-detail-btn" style="background:#888;cursor:default" disabled>Out of Stock</button>
        <button class="product-detail-btn" style="margin-top:8px;background:#fff;color:#111;border:1px solid #E0E0E0" onclick="openNotify('${p.id}','${p.name} ${p.dose}')">Notify Me When Available</button>`;
 
@@ -43,7 +43,7 @@ function productPage(productId, stock, coas, prices = {}) {
         <span class="product-detail-cat" style="color:${p.cat_color};background:${p.cat_bg}">${p.category}</span>
         <h1 class="product-detail-name">${p.name}</h1>
         <div class="product-detail-dose">${p.dose}</div>
-        <div class="product-detail-price">CA$${p.price}</div>
+        <div class="product-detail-price">CA$${(prices[p.id]!==undefined?prices[p.id]:p.price)}</div>
         ${btn}
         <p class="product-detail-desc">${p.desc}</p>
         ${coaList ? `<div class="product-detail-coas"><h3>Certificates of Analysis</h3>${coaList}</div>` : ''}
