@@ -113,7 +113,7 @@ function layout({ title, description, page, body, extraScript = '', prices = nul
   </div>
 </footer>
 
-<script>var PRODUCTS=${JSON.stringify(PRODUCTS)};
+<script>var PRODUCTS=${JSON.stringify(PRODUCTS)};(function(){var _p=${JSON.stringify(prices||{})};PRODUCTS=PRODUCTS.map(function(x){return _p[x.id]!==undefined?Object.assign({},x,{price:_p[x.id]}):x;});})();
 function toggleMobileNav(){var n=document.getElementById('mobile-nav');n.classList.toggle('open');}
 function closeMobileNav(){document.getElementById('mobile-nav').classList.remove('open');}
 </script>
