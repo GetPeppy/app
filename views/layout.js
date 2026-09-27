@@ -1,5 +1,38 @@
 const PRODUCTS = [
-  { id:'retatrutide-10mg',    name:'Retatrutide',            dose:'10mg',          price:90,  category:'Metabolic Research',  cat_color:'#D97706', cat_bg:'#FEF3C7', desc:'Retatrutide is a triple GIP, GLP-1, and glucagon receptor agonist peptide studied for its effects on metabolic function, energy regulation, and body composition in preclinical and clinical research.' },
+  { 
+    id:'retatrutide-10mg',    
+    name:'Retatrutide',            
+    dose:'10mg',          
+    price:90,  
+    category:'Metabolic Research',  
+    cat_color:'#D97706', 
+    cat_bg:'#FEF3C7', 
+    desc:'Retatrutide is a triple GIP, GLP-1, and glucagon receptor agonist peptide studied for its effects on metabolic function, energy regulation, and body composition in preclinical and clinical research.',
+    researchWarning: [
+      'This product is strictly for laboratory research purposes only and is not intended for human consumption, injection, therapeutic use, or any application outside of controlled research environments.',
+      'Not approved for human use: Retatrutide is not approved by Health Canada, the FDA, EMA, or any comparable regulatory authority. It is currently under clinical development as an investigational therapeutic compound.',
+      'Must be 21 years of age or older to purchase. Ships within Canada only. Discrete packaging.'
+    ],
+    fullDescription: 'Retatrutide (LY3437943) is a next-generation triple hormone receptor agonist engineered to simultaneously activate GLP-1, GIP, and glucagon receptors. This multi-pathway mechanism represents a significant advancement in metabolic research peptides, offering a comprehensive tool for studying complex metabolic interactions, energy expenditure, and glucose homeostasis.',
+    researchApplications: [
+      'GLP-1, GIP, and glucagon receptor pathway activation and synergistic signalling',
+      'Appetite regulation and satiety signalling research in metabolic models',
+      'Glucose metabolism, insulin sensitivity, and glycemic control studies',
+      'Energy expenditure, thermogenesis, and fat oxidation pathways',
+      'Body composition and weight management research protocols',
+      'Hepatic fat reduction and cardiometabolic marker studies'
+    ],
+    researchEvidence: {
+      'Weight loss': 'Phase 2 NEJM trial (2023) demonstrated mean body weight reductions of 24.2% over 48 weeks at 12mg dosing, substantially exceeding results from GLP-1 mono-agonists or dual agonists.',
+      'Glycemic control': 'Significant reductions in HbA1c and improved fasting glucose in type 2 diabetes models, with enhanced insulin sensitivity across multiple tissue compartments.',
+      'Metabolic health': 'Decreased visceral and hepatic fat content, elevated resting energy expenditure through glucagon-driven thermogenesis, and improvements in blood lipid panels.',
+      'Receptor binding': 'High-affinity binding across all three target receptors: GLP-1R EC50 0.775 nM, GIPR EC50 0.0643 nM, GCGR EC50 5.79 nM.'
+    },
+    storageHandling: {
+      'Lyophilized powder': 'Store at -20°C in a cool, dry place, sealed in the original vial. Protect from heat, light, and moisture. Shelf life: 24+ months when stored at -20°C.',
+      'After reconstitution': 'Reconstitute with bacteriostatic water. Keep refrigerated at 2-8°C and use within 7 days. Do not freeze reconstituted solution.'
+    }
+  },
   { id:'retatrutide-20mg',    name:'Retatrutide',            dose:'20mg',          price:150, category:'Metabolic Research',  cat_color:'#D97706', cat_bg:'#FEF3C7', desc:'Retatrutide is a triple GIP, GLP-1, and glucagon receptor agonist peptide studied for its effects on metabolic function, energy regulation, and body composition in preclinical and clinical research.' },
   { id:'mots-c-10mg',         name:'MOTS-c',                 dose:'10mg',          price:40,  category:'Metabolic Research',  cat_color:'#D97706', cat_bg:'#FEF3C7', desc:'MOTS-c is a mitochondrial-derived peptide studied for its role in metabolic regulation, insulin sensitivity, and exercise performance in preclinical research models.' },
   { id:'mots-c-40mg',         name:'MOTS-c',                 dose:'40mg',          price:120, category:'Metabolic Research',  cat_color:'#D97706', cat_bg:'#FEF3C7', desc:'MOTS-c is a mitochondrial-derived peptide studied for its role in metabolic regulation, insulin sensitivity, and exercise performance in preclinical research models.' },
