@@ -97,7 +97,7 @@ function productPage(productId, stock, coas, prices = {}) {
       <div class="product-card-body">
         <div class="product-card-name">${r.name}</div>
         <div class="product-card-dose">${r.dose}</div>
-        <div class="product-card-price">CA$${r.price}</div>
+        <div class="product-card-price">CA$${(prices[r.id]!==undefined?prices[r.id]:r.price)}</div>
       </div>
     </a>`).join('');
 
