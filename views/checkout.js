@@ -109,7 +109,7 @@ async function placeOrder() {
 }
 
 function showConfirmation(ref,payAddr,total,shipping,method) {
-  var mLabel={usdc:'USDC (Ethereum)',btc:'Bitcoin',etransfer:'e-Transfer'}[method]||method;
+  var mLabel={usdc:'USDC (ETH Network)',btc:'Bitcoin (BTC Network)',etransfer:'e-Transfer'}[method]||method;
   document.getElementById('confirm-content').innerHTML=
     '<div style="width:64px;height:64px;background:#16A34A;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:28px;margin:0 auto 20px">\u2713</div>'
     +'<h1 style="font-family:Fraunces,serif;font-size:36px;font-weight:300;margin-bottom:8px">Order Placed!</h1>'
@@ -153,8 +153,8 @@ renderSummary();
         </div>
         <h2 class="checkout-heading" style="margin-top:32px">Payment Method</h2>
         <div class="pay-methods">
-          <div class="pay-opt active" onclick="selectPay(this,'usdc')"><div class="pay-opt-name">USDC</div><div class="pay-opt-sub">USD Coin</div></div>
-          <div class="pay-opt" onclick="selectPay(this,'btc')"><div class="pay-opt-name">Bitcoin</div><div class="pay-opt-sub">BTC on-chain</div></div>
+          <div class="pay-opt active" onclick="selectPay(this,'usdc')"><div class="pay-opt-name">USDC</div><div class="pay-opt-sub">USD Coin • ETH Network</div></div>
+          <div class="pay-opt" onclick="selectPay(this,'btc')"><div class="pay-opt-name">Bitcoin</div><div class="pay-opt-sub">BTC Network</div></div>
           <div class="pay-opt" onclick="selectPay(this,'etransfer')"><div class="pay-opt-name">e-Transfer</div><div class="pay-opt-sub">Canadian banks</div></div>
         </div>
         <div id="co-error" style="display:none;background:#FEE2E2;color:#991B1B;padding:12px 16px;border-radius:6px;margin-top:8px;font-size:13px"></div>
